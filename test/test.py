@@ -70,14 +70,14 @@ def main():
                 server.brocastPub(tid, oid, topic, coopMap_bytes, coopMapType) # Pass bytes
 
             elif choice == 3: # brocastSub
-                tid = int(input("tid (默认为0): ") or "0")
-                oid = input("oid: ")
-                topic = int(input("topic: "))
-                context = input("context (例如: ffffffffffffffffffffffffffffffff): ")
-                coopMap_input = input("coopMap 数据 (普通字符串，将进行UTF-8编码为bytes): ")
+                tid = 1
+                oid = "京A12345"
+                topic = 12345
+                context = "ffffffffffffffffffffffffffffffff"
+                coopMap_input = "示例协作图数据"
                 coopMap_bytes = coopMap_input.encode('utf-8') # Encode to bytes
-                coopMapType = int(input("coopMapType: "))
-                bearCap = int(input("bearCap (1 代表需要承载能力): "))
+                coopMapType = 0
+                bearCap = 0
                 server.brocastSub(tid, oid, topic, context, coopMap_bytes, coopMapType, bearCap) # Pass bytes
 
             elif choice == 4: # brocastSubnty with example values

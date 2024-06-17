@@ -1,5 +1,5 @@
-selfip="192.168.20.224"
-#selfip="192.168.20.223"
+#selfip="192.168.20.224"
+selfip="192.168.20.223"
 send_pub_port=66666
 send_sub_port=55555
 recv_pub_port=77777
@@ -18,8 +18,8 @@ recv_type = 5
 data_dir = "/home/nvidia/mydisk/czl/InteroperationApp/itp_data"
 #data_dir = "/home/czl/InteroperationApp/itp_data"
 
-source_id = "京A12345"
-#source_id = "津A12345"
+#source_id = "京A12345"
+source_id = "津A12345"
 peer_id = ""
 board_id = ""
 

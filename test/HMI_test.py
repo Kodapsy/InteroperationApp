@@ -4,7 +4,7 @@ import time
 import threading
 import os
 data_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../data"))
-def query_ncs_status_and_listen(broadcast_ip="192.168.20.199", port=50500, listen_ip="192.168.20.224", listen_port=50501, output_file=os.path.join(data_dir,"output.json"),output_file2=os.path.join(data_dir,"output2.json")):
+def query_ncs_status_and_listen(broadcast_ip="192.168.20.198", port=50500, listen_ip="192.168.20.223", listen_port=50501, output_file=os.path.join(data_dir,"output.json"),output_file2=os.path.join(data_dir,"output2.json")):
     """
     查询NCS状态并在收到2002回复后，启动监听功能。
     持续监听2101消息，将data数据写入文件，每分钟发送心跳信息(tag==2005)。
@@ -15,11 +15,11 @@ def query_ncs_status_and_listen(broadcast_ip="192.168.20.199", port=50500, liste
 
     # 构造请求消息
     request_message = json.dumps({"tag": 2001, "data": {"ip": listen_ip, "port": listen_port}})
-
+    #request_message2 = json.dumps({"tag": 1001})
     try:
         # 发送广播消息
         sock.sendto(request_message.encode('utf-8'), (broadcast_ip, port))
-
+        #sock.sendto(request_message2.encode('utf-8'), (broadcast_ip, port))
         # 设置超时时间
         sock.settimeout(5)
 
@@ -30,6 +30,7 @@ def query_ncs_status_and_listen(broadcast_ip="192.168.20.199", port=50500, liste
         # 检查是否收到2002的回复
         if response_data.get("tag") == 2002:
             # 启动心跳线程
+            print(response_data)
             unique_id = response_data.get("unique")
             heartbeat_thread = threading.Thread(target=send_heartbeat, args=(listen_ip, listen_port,unique_id))
             heartbeat_thread.daemon = True
@@ -82,6 +83,8 @@ def listen_vehicle_info(listen_ip, listen_port, output_file,output_file2):
                     self_data = message.get("data", {})
                     with open(output_file2, "w", encoding="utf-8") as f:
                         json.dump(self_data, f, indent=4, ensure_ascii=False)
+                if message.get("tag") == 2006:
+                    print(message)
             except json.JSONDecodeError:
                 print("JSON消息解析失败。")
     except KeyboardInterrupt:

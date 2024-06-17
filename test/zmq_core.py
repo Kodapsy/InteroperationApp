@@ -410,7 +410,7 @@ def core_sub2app():
                             "CommonData":data["coopMap"],
                             "BearFlag":1 if data["bearCap"] == 1 else 0,
                             "ContextId":data["context"],
-                            "Mid":czlconfig.boardCastSub
+                            "Mid":czlconfig.boardCastSubNotify
                         }
 
                         try:
@@ -771,6 +771,14 @@ def core_sub2obu():
                                 msg["msg"]["topic"] = topic
                                 msg["msg"]["coopmap"] = TLVmsg["CommonData"]
                                 msg["msg"]["coopmaptype"] = TLVmsg["CommonDataType"]
+                                json_msg =  json.dumps(msg, ensure_ascii=False)
+                                topic_prefixed_message = f"{topic} {json_msg}".strip()
+                                logger_core_obu.info(f"core_sub2obu: boardCastPub, topic '{topic}', PayloadLength {len(json_msg)}, 转发到 APP socket: {msg}")
+                                try:
+                                    pub2app_socket.send_string(topic_prefixed_message)
+                                except Exception as e_send_app:
+                                    logger_core_obu.error(f"core_sub2obu: 转发 boardCastPub 到 APP socket 失败: {e_send_app}", exc_info=True)
+                                    continue
 
                             elif mid_tlv == czlconfig.boardCastSub:
                                 required_keys_tlv_sub = ["CommonData", "ContextId", "BearFlag"]
@@ -784,6 +792,14 @@ def core_sub2obu():
                                 msg["msg"]["context"] = TLVmsg["ContextId"]
                                 msg["msg"]["coopmap"] = TLVmsg["CommonData"]
                                 msg["msg"]["bearcap"] = TLVmsg["BearFlag"]
+                                json_msg =  json.dumps(msg, ensure_ascii=False)
+                                topic_prefixed_message = f"{topic} {json_msg}".strip()
+                                logger_core_obu.info(f"core_sub2obu: boardCastPub, topic '{topic}', PayloadLength {len(json_msg)}, 转发到 APP socket: {msg}")
+                                try:
+                                    pub2app_socket.send_string(topic_prefixed_message)
+                                except Exception as e_send_app:
+                                    logger_core_obu.error(f"core_sub2obu: 转发 boardCastPub 到 APP socket 失败: {e_send_app}", exc_info=True)
+                                    continue
 
                             elif mid_tlv == czlconfig.boardCastSubNotify:
                                 required_keys_tlv_notify = ["CommonData", "ContextId", "BearFlag"]
@@ -797,6 +813,14 @@ def core_sub2obu():
                                 msg["msg"]["context"] = TLVmsg["ContextId"]
                                 msg["msg"]["coopmap"] = TLVmsg["CommonData"]
                                 msg["msg"]["bearcap"] = TLVmsg["BearFlag"]
+                                json_msg =  json.dumps(msg, ensure_ascii=False)
+                                topic_prefixed_message = f"{topic} {json_msg}".strip()
+                                logger_core_obu.info(f"core_sub2obu: boardCastPub, topic '{topic}', PayloadLength {len(json_msg)}, 转发到 APP socket: {msg}")
+                                try:
+                                    pub2app_socket.send_string(topic_prefixed_message)
+                                except Exception as e_send_app:
+                                    logger_core_obu.error(f"core_sub2obu: 转发 boardCastPub 到 APP socket 失败: {e_send_app}", exc_info=True)
+                                    continue
 
                             elif mid_tlv == czlconfig.subScribe:
 
@@ -813,6 +837,14 @@ def core_sub2obu():
                                 msg["msg"]["context"] = TLVmsg["ContextId"]
                                 msg["msg"]["coopmap"] = TLVmsg["CommonData"]
                                 msg["msg"]["bearinfo"] = TLVmsg["BearFlag"]
+                                json_msg =  json.dumps(msg, ensure_ascii=False)
+                                topic_prefixed_message = f"{topic} {json_msg}".strip()
+                                logger_core_obu.info(f"core_sub2obu: boardCastPub, topic '{topic}', PayloadLength {len(json_msg)}, 转发到 APP socket: {msg}")
+                                try:
+                                    pub2app_socket.send_string(topic_prefixed_message)
+                                except Exception as e_send_app:
+                                    logger_core_obu.error(f"core_sub2obu: 转发 boardCastPub 到 APP socket 失败: {e_send_app}", exc_info=True)
+                                    continue
 
                             elif mid_tlv == czlconfig.notify:
                                 required_keys_tlv_notify = ["CommonData", "ContextId", "BearFlag"]
@@ -826,7 +858,15 @@ def core_sub2obu():
                                 msg["msg"]["act"] = data.get("OP")
                                 msg["msg"]["context"] = TLVmsg["ContextId"]
                                 msg["msg"]["coopmap"] = TLVmsg["CommonData"]
-                                msg["msg"]["bearcap"] = TLVmsg["BearFlag"] 
+                                msg["msg"]["bearcap"] = TLVmsg["BearFlag"]
+                                json_msg =  json.dumps(msg, ensure_ascii=False)
+                                topic_prefixed_message = f"{topic} {json_msg}".strip()
+                                logger_core_obu.info(f"core_sub2obu: boardCastPub, topic '{topic}', PayloadLength {len(json_msg)}, 转发到 APP socket: {msg}")
+                                try:
+                                    pub2app_socket.send_string(topic_prefixed_message)
+                                except Exception as e_send_app:
+                                    logger_core_obu.error(f"core_sub2obu: 转发 boardCastPub 到 APP socket 失败: {e_send_app}", exc_info=True)
+                                    continue  
 
                             elif mid_tlv == czlconfig.streamSendend:
                                 logger_core_obu.info(f"core_sub2obu: 处理 streamSendend ACK (mid {mid_tlv})")

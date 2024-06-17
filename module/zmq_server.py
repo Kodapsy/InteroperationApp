@@ -5,6 +5,7 @@ import os
 import time
 import base64
 import logging
+from tying import List
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
@@ -228,7 +229,7 @@ class ICPServer:
     def subMessage(self,
                    tid:int =0,
                    oid:str = "",
-                   did:list[str] = [], 
+                   did:List[str] = [], 
                    topic:int = 0,
                    act:int = 0,
                    context:str = "",
@@ -359,7 +360,7 @@ class ICPServer:
 
     def streamSend(self,
                    sid:str = "",
-                   data:str = "" 
+                   data:bytes = b'' 
                    ):
         """
         流发送
@@ -369,12 +370,18 @@ class ICPServer:
         if sid is None or data is None:
             logger.error("streamSend: sid 和 data 不能为空！请提供有效的数据。") 
             return
+        data_str = ""
+        try:
+            data_str = base64.b64encode(data).decode('utf-8')
+        except TypeError:
+            logger.error(f"streamSend: data must be bytes-like for Base64 encoding, got {type(data)}.")
+            return
         message = {
             "mid":czlconfig.streamSend,
             "app_id": self.app_id,
             "msg":{
                 "sid": sid,
-                "data": data 
+                "data": data_str
             }
         }
         self.send(message)
@@ -487,7 +494,6 @@ class ICPClient:
             
             parsed_message_dict = json.loads(json_part_str)
 
-            # --- 开始解码 coopMap ---
             if isinstance(parsed_message_dict, dict) and "msg" in parsed_message_dict and \
                isinstance(parsed_message_dict["msg"], dict) and "coopmap" in parsed_message_dict["msg"]:
                 
@@ -508,8 +514,25 @@ class ICPClient:
                 elif coopMap_str == "":
                      logger.debug("'coopMap' field is an empty string, no decoding needed.")
 
+            if isinstance(parsed_message_dict, dict) and "data" in parsed_message_dict:
+                data_str = parsed_message_dict["data"]
+                if isinstance(data_str, str) and data_str:
+                    try:
+                        base64_encoded_bytes = data_str.encode('utf-8')
+                        original_data_bytes = base64.b64decode(base64_encoded_bytes)
+                        
+                        parsed_message_dict["data"] = original_data_bytes 
+                        logger.info(f"Successfully decoded 'data' field.")
+                    except base64.binascii.Error as b64_err:
+                        logger.error(f"Failed to Base64 decode 'data' string ('{data_str}'): {b64_err}. Keeping as string.")
+                    except UnicodeEncodeError as enc_err:
+                        logger.error(f"Failed to encode 'data' string to bytes before Base64 decoding: {enc_err}. Keeping as string.")
+                    except Exception as e_decode:
+                        logger.error(f"An unexpected error occurred during 'data' decoding: {e_decode}. Keeping as string.")
+                elif data_str == "":
+                    logger.debug("'data' field is an empty string, no decoding needed.")
+
             return parsed_message_dict
-        
         except json.JSONDecodeError:
             logger.error(f"[!] Failed to decode JSON message: {raw_message_str}")
             return None
