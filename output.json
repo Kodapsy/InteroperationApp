@@ -1,0 +1,13 @@
+{
+    "device_id": "23330009",
+    "drive_status": 2,
+    "ele": 108.7,
+    "hea": 118.925,
+    "lat": 39.9623641,
+    "lon": 116.3534473,
+    "pos_valid": true,
+    "spd": 0.504,
+    "vehicle_num": "23330009",
+    "vehicle_type": 10,
+    "vip_status": 0
+}
