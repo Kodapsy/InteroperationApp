@@ -1,0 +1,19 @@
+include zmq.usl
+print(__msg)
+j={}
+j.Message_type = 1
+j.CapsList = []
+for i in range(0,__msg.body.cap.size):
+    cap_dict = {}
+    cap_dict.id = __msg.body.cap[i].id
+    cap_dict.version = __msg.body.cap[i].version
+    cap_dict.config = __msg.body.cap[i].config
+    j.CapsList.append(cap_dict)
+j.Source_vehicle_id = __msg.body.sourceId
+j.Peer_vehicle_id = __msg.body.destId
+
+if (!defined(j)):
+    log("Invalid JSON format: " + __msg.body)
+    exit()
+s= toJson(j)
+zmq_publish(s)
