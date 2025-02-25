@@ -1,0 +1,15 @@
+include zmq.usl
+print(__msg)
+j={}
+j.Message_type = 2
+j.Data = __msg.body.payload
+j.Topic = __msg.body.topic
+j.Qos = __msg.body.packetQos
+j.Operator = __msg.body.op
+j.Source_vehicle_id = __msg.body.sourceId
+j.Peer_vehicle_id = __msg.body.destId
+if (!defined(j)):
+    log("Invalid JSON format: " + __msg.body)
+    exit()
+s= toJson(j)
+zmq_publish(s)
