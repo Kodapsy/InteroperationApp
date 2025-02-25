@@ -1,2 +1,0 @@
-include zmq.usl
-zmq_publish("xxxxxxxxxxxxxx")
