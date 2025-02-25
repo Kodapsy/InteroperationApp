@@ -1,0 +1,6 @@
+{
+    "host": "localhost",
+    "user": "root",
+    "password": "RootPassword123!",
+    "database":"capability_db"
+}
