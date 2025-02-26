@@ -2,7 +2,7 @@ import zmq
 import json
 
 class ICPServer:
-    def __init__(self, port=27130, app_id="default_app", reliability=0, length=0, message_type=1):
+    def __init__(self, port=27130, app_id="default_app", reliability=0, length=0):
         """
         初始化 ICPServer 类，绑定到指定端口。
         :param port: 服务器端口号，默认为 27130
@@ -15,7 +15,6 @@ class ICPServer:
         self.app_id = app_id
         self.reliability = reliability
         self.length = length
-        self.message_type = message_type
         self.context = zmq.Context()
         self.socket = self.context.socket(zmq.PUB)
         self.socket.bind(f"tcp://*:{self.port}")
@@ -29,7 +28,8 @@ class ICPServer:
                      operator="default_operator", 
                      source_id="unknown_source", 
                      peer_id="unknown_peer", 
-                     extension=None):
+                     extension=None,
+                     message_type=1):
         """
         发送消息方法
         :param data: 消息数据，默认为空字符串
@@ -45,7 +45,7 @@ class ICPServer:
             "ApplicationIdentifier": self.app_id,
             "Reliability": self.reliability,
             "Length": self.length,
-            "Message Type": self.message_type,
+            "Message Type": message_type,
             "Data": data,
             "CapsList": caps_list or [],
             "Topic": topic,

@@ -3,7 +3,7 @@ include zmq.usl
 
 # 解析消息内容为 JSON
 j = __msg.body.content.jsonParse()
-print(j)
+#print(j)
 
 # 判断 JSON 是否有效
 if (!defined(j)):
@@ -45,17 +45,20 @@ if message_type == 1:
     m.body.destId = "FFFFFFFF"
 elif message_type == 2:
     m.id = m.ids.ICP_SUB
+elif message_type == 3:
+    m.id = m.ids.ICP_PUB
     m.body.needAck = True
-    m.body.op = 1
-    m.body.topic = 123456
+    m.body.op = j.get("Operator",-1)
+    m.body.topic = j.get("Topic",-1)
     m.body.communiNetwork = 34
     m.body.packetRL = 1
-    m.body.packetQoS = 1
-    m.body.sourceId = 12345678
-    m.body.payload = j.get("Data", None)
+    m.body.packetQoS = j.get("QoS",-1)
+    m.body.sourceId = "\2A12345"
+    m.body.destId = "FFFFFFFF"
+    m.body.payload = j.get("Data",-1)
 else:
     log("Unknown Message Type")
     exit()
-
+print(m)
 # 发送消息
 send(m, "psaicp.so")
