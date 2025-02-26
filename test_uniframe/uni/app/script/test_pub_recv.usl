@@ -1,6 +1,5 @@
 # 引入必要模块
 include zmq.usl
-
 # 解析消息内容为 JSON
 j = __msg.body.content.jsonParse()
 #print(j)
@@ -25,6 +24,7 @@ m = _UniMsg("icp")
 # 根据 Message Type 处理
 if message_type == 1:
     m.id = m.ids.ICP_ECHO
+    caps_data = DB("MYSQL","root","RootPassword123!","capability_db","localhost",3306)
     m.body.pos.lo = self_data.lon
     m.body.pos.la = self_data.lat
     m.body.pos.al = self_data.ele
@@ -35,12 +35,7 @@ if message_type == 1:
     m.body.accel.vert = 3
     m.body.accel.yaw = 4
     m.body.opts = 123
-    m.body.cap[0].id = 1
-    m.body.cap[0].version = 2
-    m.body.cap[0].config = 3
-    m.body.cap[1].id = 4
-    m.body.cap[1].version = 5
-    m.body.cap[1].config = 6
+    print(caps_data.select("select * from capabilities"))
     m.body.sourceId = "\2A12345"
     m.body.destId = "FFFFFFFF"
 elif message_type == 2:
@@ -59,6 +54,6 @@ elif message_type == 3:
 else:
     log("Unknown Message Type")
     exit()
-print(m)
+#print(m)
 # 发送消息
 send(m, "psaicp.so")

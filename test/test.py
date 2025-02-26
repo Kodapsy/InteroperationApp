@@ -1,8 +1,12 @@
 #from zmq_server import send_zmq
+import sys
+import os
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+sys.path.append(os.path.join(project_root, "module"))
 from zmq_server import ICPServer 
-import json
 def read_json_file():
-    file_path = "tensor_data_small.json"
+    data_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../data"))
+    file_path = os.path.join(data_dir, "tensor_data_small.json")
     try:
         with open(file_path, 'r', encoding='utf-8') as file:
             data = file.read().strip()  # 直接读取文件内容为字符串
