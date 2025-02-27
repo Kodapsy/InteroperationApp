@@ -23,7 +23,7 @@ if __name__ == "__main__":
 
     # 删除能力
     manager.remove_capability(1)
-    manager.remove_capability(2)
+    # manager.remove_capability(2)
 
     # 查询所有能力
     print("\n删除能力后的所有能力:")
