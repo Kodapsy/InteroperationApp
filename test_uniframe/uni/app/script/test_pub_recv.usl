@@ -15,6 +15,7 @@ message_type = j.get("Message Type", -1)
 # 打开文件并解析内容为 JSON
 file = File()
 file.open("/home/czl/output.json")
+#file.open("/home/nvidia/mydisk/czl/InteroperationApp/data/output.json")
 file_content = file.read(65536)
 self_data = file_content.jsonParse()
 
@@ -24,7 +25,18 @@ m = _UniMsg("icp")
 # 根据 Message Type 处理
 if message_type == 1:
     m.id = m.ids.ICP_ECHO
-    caps_data = DB("MYSQL","root","RootPassword123!","capability_db","localhost",3306)
+    caps_data = DB("MYSQL","capability_db", "root","RootPassword123!","127.0.0.1",3306)
+    sql = caps_data.select("select * from capabilities")
+    if !defined(sql) || sql.length() <= 0:
+        log("No caps yet")
+    else:
+        j = 0
+        for i in sql:
+            #print(i)
+            m.body.cap[j].id = i.CAPID
+            m.body.cap[j].version = i.CAPVER
+            m.body.cap[j].config = i.CAPCONFIG
+            j = j + 1
     m.body.pos.lo = self_data.lon
     m.body.pos.la = self_data.lat
     m.body.pos.al = self_data.ele
@@ -34,8 +46,6 @@ if message_type == 1:
     m.body.accel.la = 2
     m.body.accel.vert = 3
     m.body.accel.yaw = 4
-    m.body.opts = 123
-    print(caps_data.select("select * from capabilities"))
     m.body.sourceId = "\2A12345"
     m.body.destId = "FFFFFFFF"
 elif message_type == 2:
@@ -54,6 +64,6 @@ elif message_type == 3:
 else:
     log("Unknown Message Type")
     exit()
-#print(m)
+print(m)
 # 发送消息
 send(m, "psaicp.so")

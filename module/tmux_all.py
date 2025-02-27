@@ -28,7 +28,7 @@ commands = [
 
 for cmd in commands:
     os.system(f'tmux send-keys -t {session_name}:step2 "{cmd}" C-m')
-    time.sleep(0.5)  # 避免命令输入过快
+    time.sleep(1)  # 避免命令输入过快
 
 # 5. 附加到 tmux 会话，方便观察
 time.sleep(1)
