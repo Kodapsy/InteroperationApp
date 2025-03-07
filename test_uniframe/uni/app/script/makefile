@@ -5,4 +5,5 @@ install:
 		icp_test_recv_echo.usl \
 		icp_test_recv_pub.usl \
 		icp_test_recv_sub.usl \
+		call_echo.usl \
 	${UNIDIR}/app/script/
