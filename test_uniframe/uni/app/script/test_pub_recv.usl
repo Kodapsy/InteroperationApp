@@ -42,10 +42,10 @@ if message_type == 1:
     m.body.pos.al = self_data.ele
     m.body.speed = self_data.spd
     m.body.heading = self_data.hea
-    m.body.accel.lo = 1
-    m.body.accel.la = 2
-    m.body.accel.vert = 3
-    m.body.accel.yaw = 4
+    m.body.accel.lo = self_data.longAcc
+    m.body.accel.la = self_data.latAcc
+    m.body.accel.vert = self_data.vertAcc
+    m.body.accel.yaw = self_data.yawRate
     m.body.sourceId = "\2A12345"
     m.body.destId = "FFFFFFFF"
 elif message_type == 2:
