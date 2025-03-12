@@ -14,7 +14,7 @@ message_type = j.get("Message Type", -1)
 
 # 打开文件并解析内容为 JSON
 file = File()
-file.open("/home/czl/output.json")
+file.open("/home/czl/InteroperationApp/data/output.json")
 #file.open("/home/nvidia/mydisk/czl/InteroperationApp/data/output.json")
 file_content = file.read(65536)
 self_data = file_content.jsonParse()

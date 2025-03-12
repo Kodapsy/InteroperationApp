@@ -1,9 +1,9 @@
 {
     "device_id": "23330009",
-    "timestamp": 1741337507783,
+    "timestamp": 1741767742235,
     "uu_rsrp": -85.0,
     "uu_rsrq": -19.5,
     "uu_sinr": -22.5,
-    "v2x_rsrp": -24,
-    "v2x_sinr": 28
+    "v2x_rsrp": -25,
+    "v2x_sinr": 27
 }

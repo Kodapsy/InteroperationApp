@@ -57,3 +57,29 @@ class ICPServer:
         }
         # 将字典转换为 JSON 格式并发送
         self.socket.send_json(message)
+
+class ICPClient:
+    def __init__(self, port=27170,ip="192.168.20.224"):
+        """
+        初始化 ICPClient 类，连接到指定端口。
+        :param port: 服务器端口号，默认为 27170
+        """
+        self.port = port
+        self.ip = ip
+        self.context = zmq.Context()
+        self.socket = self.context.socket(zmq.SUB)
+        self.socket.connect(f"tcp://{self.ip}:{self.port}")
+        #print(f"Client connected to port {self.port}")
+        
+    def recv_message(self,topic=""):
+        """
+        接收消息方法
+        """
+        self.socket.setsockopt_string(zmq.SUBSCRIBE, topic)
+        message = self.socket.recv_string()
+        try:
+            parsed_message = json.loads(message)
+            return parsed_message
+        except json.JSONDecodeError:
+            print(f"Failed to decode message: {message}")
+            return None
