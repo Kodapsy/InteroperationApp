@@ -13,36 +13,6 @@ if (!defined(j)):
 message_type = j.get("Message Type", -1)
 isdata = j.get("Data",-1)
 
-def applyStream(remoteDevice, ip, port):
-	m = _UniMsg('itp')
-	m.id = m.ids.ITP_APPLY_STREAM
-	m.body.remoteDevice = remoteDevice
-	if ip != '':
-		m.body.remoteIp = ip
-		m.body.remotePort = port
-	send(m, "psaitp")
-
-	# 等待申请stream的返回结果
-	wait(3, "itp", "ITP_APPLY_STREAM_RSP") # 等待psaitp的返回
-	if !defined(__msg): # 等待时间内没有返回消息
-		log("apply stream fail: timeout")
-		return -1
-	if __msg.body.resultCode != 0: # psaitp返回失败
-		log("apply stream fail: " + __msg.body.reason)
-		return -1
-	# 申请成功
-	return __msg.body.streamId
-
-# 这个函数用于发送文件
-def sendFile(streamId, fileName, payloadType):
-	m = _UniMsg('itp')
-	m.id = m.ids.ITP_SEND_FILE
-	m.body.streamId = streamId
-	m.body.fileName = fileName
-	m.body.payloadType = payloadType
-	send(m, "psaitp")
-
-
 if isdata != '':
     # 打开文件并解析内容为 JSON
     file = File()
@@ -103,10 +73,41 @@ else:
     itp_file = File()
     #itp_file.open("/home/czl/InteroperationApp/data/itp_data.json")
     itp_file.open("/home/nvidia/mydisk/czl/InteroperationApp/data/itp_data.json")
-    destid = m.body.destId
+    
+    def applyStream(remoteDevice, ip, port):
+        n = _UniMsg('itp')
+        n.id = n.ids.ITP_APPLY_STREAM
+        n.body.remoteDevice = remoteDevice
+        if ip != '':
+            n.body.remoteIp = ip
+            n.body.remotePort = port
+        send(n, "psaitp")
+
+        # 等待申请stream的返回结果
+        wait(3, "itp", "ITP_APPLY_STREAM_RSP") # 等待psaitp的返回
+        if !defined(__msg): # 等待时间内没有返回消息
+            log("apply stream fail: timeout")
+            return -1
+        if __msg.body.resultCode != 0: # psaitp返回失败
+            log("apply stream fail: " + __msg.body.reason)
+            return -1
+        # 申请成功
+        return __msg.body.streamId
+
+    # 这个函数用于发送文件
+    def sendFile(streamId, fileName, payloadType):
+        n = _UniMsg('itp')
+        n.id = n.ids.ITP_SEND_FILE
+        n.body.streamId = streamId
+        n.body.fileName = fileName
+        n.body.payloadType = payloadType
+        send(n, "psaitp")
+
+
+    destId = "FFFFFFFF"
     streamId = applyStream(destId, '', 0)
     if streamId < 0:
         exit()
 
     # 然后发送文件
-    sendFile(streamId, itp_data, 3)
+    sendFile(streamId, "itp_data", 3)

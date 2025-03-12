@@ -42,7 +42,7 @@ class ICPServer:
         :param extension: 可选，扩展字段，默认为 None
         """
         Max_size = 1.4 * 1024
-        file_path = "../data/large_data.json"
+        file_path = "../data/itp_data.json"
         data_size = len(data.encode('utf-8'))
         message = {
             "ApplicationIdentifier": self.app_id,
