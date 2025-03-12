@@ -1,0 +1,61 @@
+# 测试发送一个文件
+# 参数1：文件名
+# 参数2：目的设备名（车牌号）
+# 参数3：目的ip地址（DSMP模式不需要）
+# 参数4：目的端口（DSMP模式不需要)
+if __msg.pto != '' || __msg.body.argc < 3:
+	log("Usage: msg init " + __msg.body.argv[0] + " filename dest_dev_id [ ip port ]");
+	exit()
+
+fileName = __msg.body.argv[1]
+fileStat = File::stat(fileName)
+if !defined(fileStat) || !defined(fileStat.size) || fileStat.size <= 0:
+	log("file not exist or size 0")
+	exit()
+
+destId = __msg.body.argv[2]
+if __msg.body.argc == 5:
+	ip = __msg.body.argv[3]
+	port = __msg.body.argv[4].toInt()
+else:
+	ip = ''
+	port = 0
+
+# 这个函数用于申请一个stream，返回streamId
+# 如果参数ip为空，表示DSMP模式，不需要
+def applyStream(remoteDevice, ip, port):
+	m = _UniMsg('itp')
+	m.id = m.ids.ITP_APPLY_STREAM
+	m.body.remoteDevice = remoteDevice
+	if ip != '':
+		m.body.remoteIp = ip
+		m.body.remotePort = port
+	send(m, "psaitp")
+
+	# 等待申请stream的返回结果
+	wait(3, "itp", "ITP_APPLY_STREAM_RSP") # 等待psaitp的返回
+	if !defined(__msg): # 等待时间内没有返回消息
+		log("apply stream fail: timeout")
+		return -1
+	if __msg.body.resultCode != 0: # psaitp返回失败
+		log("apply stream fail: " + __msg.body.reason)
+		return -1
+	# 申请成功
+	return __msg.body.streamId
+
+# 这个函数用于发送文件
+def sendFile(streamId, fileName, payloadType):
+	m = _UniMsg('itp')
+	m.id = m.ids.ITP_SEND_FILE
+	m.body.streamId = streamId
+	m.body.fileName = fileName
+	m.body.payloadType = payloadType
+	send(m, "psaitp")
+	
+# 首先申请一个stream
+streamId = applyStream(destId, ip, port)
+if streamId < 0:
+	exit()
+
+# 然后发送文件
+sendFile(streamId, fileName, 3)

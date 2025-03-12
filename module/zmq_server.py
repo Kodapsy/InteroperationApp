@@ -21,7 +21,7 @@ class ICPServer:
         print(f"Server started on port {self.port}")
 
     def send_message(self, 
-                     data="", 
+                     data="-1", 
                      caps_list=None, 
                      topic="", 
                      qos=0, 
@@ -41,6 +41,9 @@ class ICPServer:
         :param peer_id: 可选，目标设备 ID，默认为 "unknown_peer"
         :param extension: 可选，扩展字段，默认为 None
         """
+        Max_size = 1.4 * 1024
+        file_path = "../data/large_data.json"
+        data_size = len(data.encode('utf-8'))
         message = {
             "ApplicationIdentifier": self.app_id,
             "Reliability": self.reliability,
@@ -55,6 +58,10 @@ class ICPServer:
             "Peer Vehicle ID": peer_id,
             "Extension": extension or {}
         }
+        if data_size > Max_size:
+            with open(file_path, "w", encoding="utf-8") as f:
+                json.dump(message, f, ensure_ascii=False, indent=4)
+            message["Data"] = ''
         # 将字典转换为 JSON 格式并发送
         self.socket.send_json(message)
 

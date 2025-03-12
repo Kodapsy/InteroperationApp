@@ -1,0 +1,5 @@
+assert(__msg.pto == 'itp')
+fileName = __msg.body.fileName
+payloadType = __msg.body.payloadType
+streamId = __msg.body.streamId
+remoteDevice = __msg.body.remoteDevice
