@@ -13,7 +13,7 @@ if (!defined(j)):
 message_type = j.get("Message Type", -1)
 isdata = j.get("Data",-1)
 
-if isdata != '':
+if isdata != 'use itp':
     # 打开文件并解析内容为 JSON
     file = File()
     #file.open("/home/czl/InteroperationApp/data/output.json")
@@ -60,7 +60,7 @@ if isdata != '':
         m.body.communiNetwork = 34
         m.body.packetRL = 1
         m.body.packetQoS = j.get("QoS",-1)
-        m.body.sourceId = "\2A12345"
+        m.body.sourceId = "\A12345"
         m.body.destId = "FFFFFFFF"
         m.body.payload = j.get("Data",-1)
     else:
@@ -71,8 +71,7 @@ if isdata != '':
     send(m, "psaicp.so")
 else:
     itp_file = File()
-    #itp_file.open("/home/czl/InteroperationApp/data/itp_data.json")
-    itp_file.open("/home/nvidia/mydisk/czl/InteroperationApp/data/itp_data.json")
+    itp_file = j.get("File Path",-1)
     
     def applyStream(remoteDevice, ip, port):
         n = _UniMsg('itp')
@@ -110,4 +109,4 @@ else:
         exit()
 
     # 然后发送文件
-    sendFile(streamId, "itp_data", 3)
+    sendFile(streamId, itp_file , 3)

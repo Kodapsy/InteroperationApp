@@ -15,7 +15,7 @@ def read_json_file():
         print(f"Error reading JSON file: {e}")
         return None
 if __name__ == "__main__":
-    server = ICPServer()
+    server = ICPServer(port=44444)
     msg = read_json_file()
     while True:
         try:
@@ -27,7 +27,10 @@ if __name__ == "__main__":
                 print("Invalid message type. Please enter a number between 1 and 3.")
                 continue
             topic = input("Enter topic: ").strip()
-            server.send_message(data=msg, topic=topic,message_type=message_type)
+            if(message_type == 3):
+                server.send_message(data=msg, topic=topic,message_type=message_type)
+            else:
+                server.send_message(message_type=message_type)
             print(f"Message sent with type {message_type} to topic '{topic}'.")
         except ValueError:
             print("Invalid input. Please enter a valid number for message type.")
