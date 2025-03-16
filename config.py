@@ -15,3 +15,9 @@ echo_type = 1
 #数据存放目录
 data_dir = "/home/nvidia/mydisk/czl/InteroperationApp/itp_data"
 #data_dir = 
+
+source_id = "A12345"
+peer_id = ""
+board_id = ""
+
+echo_time = 1

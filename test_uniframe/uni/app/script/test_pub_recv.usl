@@ -27,9 +27,8 @@ if isdata != 'use itp':
     # 根据 Message Type 处理
     if message_type == 1:
         m.id = m.ids.ICP_ECHO
-        caps_data = DB("MYSQL","capability_db", "root","RootPassword123!","127.0.0.1",3306)
-        sql = caps_data.select("select * from capabilities")
-        if !defined(sql) || sql.length() <= 0:
+        caps_data = j.get("CapsList",-1)
+        if !defined(caps_data) || j.get("Caps",-1) <= 0:
             log("No caps yet")
         else:
             j = 0
@@ -48,20 +47,23 @@ if isdata != 'use itp':
         m.body.accel.la = self_data.latAcc
         m.body.accel.vert = self_data.vertAcc
         m.body.accel.yaw = self_data.yawRate
-        m.body.sourceId = "\2A12345"
-        m.body.destId = "FFFFFFFF"
+        m.body.sourceId = j.get("Source Vehicle ID",-1)
+        m.body.destId = j.get("Peer Vehicle ID",-1)
     elif message_type == 2:
         m.id = m.ids.ICP_SUB
+        m.body.op = j.get("Operator",-1)
+        m.body.topic = j.get("Topic",-1)
+        m.body.packetQoS = j.get("QoS",-1)
+        m.body.sourceId = j.get("Source Vehicle ID",-1)
+        m.body.destId = j.get("Peer Vehicle ID",-1)
     elif message_type == 3:
         m.id = m.ids.ICP_PUB
         m.body.needAck = True
         m.body.op = j.get("Operator",-1)
         m.body.topic = j.get("Topic",-1)
-        m.body.communiNetwork = 34
-        m.body.packetRL = 1
         m.body.packetQoS = j.get("QoS",-1)
-        m.body.sourceId = "\A12345"
-        m.body.destId = "FFFFFFFF"
+        m.body.sourceId = j.get("Source Vehicle ID",-1)
+        m.body.destId = j.get("Peer Vehicle ID",-1)
         m.body.payload = j.get("Data",-1)
     else:
         log("Unknown Message Type")
@@ -103,7 +105,7 @@ else:
         send(n, "psaitp")
 
 
-    destId = "FFFFFFFF"
+    destId = j.get("Peer Vehicle ID",-1)
     streamId = applyStream(destId, '', 0)
     if streamId < 0:
         exit()

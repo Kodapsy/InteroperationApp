@@ -4,10 +4,10 @@ import time
 session_name = "automation"
 
 os.system(f"tmux new-session -d -s {session_name}")
-'''
+
 os.system(f'tmux send-keys -t {session_name} "python3 ../test/test.py" C-m')
 time.sleep(1)
-
+'''
 os.system(f"tmux new-window -t {session_name} -n step2")
 os.system(f'tmux send-keys -t {session_name}:step2 "python3 ../test/test_c.py" C-m')
 time.sleep(1)

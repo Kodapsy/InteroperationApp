@@ -1,7 +1,7 @@
 import argparse
 import zmq
 import threading
-import config
+import InteroperationApp.config as config
 def zmq_core_pub_server(ip, port):
     """ZMQ 服务器线程，绑定到指定 IP 和端口"""
     context = zmq.Context()

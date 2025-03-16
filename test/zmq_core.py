@@ -1,12 +1,16 @@
 import threading
 import zmq
-import config
 import json
 import os
+import sys
 import uuid
 import glob
 import time
-
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+sys.path.append(parent_dir)
+import module.CapabilityManager as CapabilityManager
+import module.CollaborationGraphManager as CollaborationGraphManager
+import config
 # 创建数据目录
 os.makedirs(config.data_dir, exist_ok=True)
 
@@ -60,33 +64,64 @@ def core_pub2obu():
     print("[core_pub2obu] 线程启动，等待消息...")
 
     count = 0
+    last_timer_send = time.time()
     while True:
         try:
-            message = sub_socket.recv_string()
-            print(f"[Core] 收到消息 {count}")
-            count += 1
-
-            # 消息处理
-            data = json.loads(message)
-            if data["Message Type"] == config.pub_type:
-                content = data["Data"]
-                #print(len(content))
-                if len(content) > MAX_SIZE:
-                    filename = f"{config.data_dir}/{uuid.uuid4()}.json"
-                    with open(filename, "w", encoding="utf-8") as f:
-                        json.dump(data, f, indent=4)
-                    data["Data"] = "use itp"
-                    data["File Path"] = filename
-                    clean_old_files()
-                message = json.dumps(data)
-                print(message)
-                pub_socket.send_string(message)
-            elif data["Message Type"] == config.sub_type:
-                message = json.dumps(data)
-                pub_socket.send_string(message)
-            else:
-                print("echo能力需求")
-
+            if sub_socket.poll(100):
+                message = sub_socket.recv_string()
+                print(f"[Core] 收到消息 {count}")
+                count += 1
+                # 消息处理
+                data = json.loads(message)
+                if data["Send Type"] == 0:
+                    if data["Message Type"] == config.pub_type:
+                        content = data["Data"]
+                        #print(len(content))
+                        if len(content) > MAX_SIZE:
+                            filename = f"{config.data_dir}/{uuid.uuid4()}.json"
+                            with open(filename, "w", encoding="utf-8") as f:
+                                json.dump(data, f, indent=4)
+                            data["Data"] = "use itp"
+                            data["File Path"] = filename
+                            clean_old_files()
+                        message = json.dumps(data)
+                        print(message)
+                        pub_socket.send_string(message)
+                    elif data["Message Type"] == config.sub_type:
+                        message = json.dumps(data)
+                        pub_socket.send_string(message)
+                    else:
+                        print(f"[!] 未知消息类型: {data['Message Type']}")
+                        sub_socket.send_string("[!] 未知消息类型")
+                elif data["Send Type"] == 1:
+                    if(data["Cap Operator"] == 0): # 添加能力
+                        CapabilityManager.CapabilityManager.putCapability(data["ApplicationIdentifier"], data["Cap ID"], data["Cap Version"], data["Cap Configuration"])
+                        sub_socket.send_string("[✔] 添加能力成功")
+                    elif(data["Cap Operator"] == 1): # 删除能力
+                        CapabilityManager.CapabilityManager.deleteCapability(data["ApplicationIdentifier"], data["Cap ID"], data["Cap Version"], data["Cap Configuration"])
+                        sub_socket.send_string("[✔] 删除能力成功")
+                    elif(data["Cap Operator"] == 2): # 获取协作图
+                        Devices = CollaborationGraphManager.CollaborationGraphManager.getDevices(data["Cap ID"], data["Cap Version"], data["Cap Configuration"])
+                        sub_socket.send_string(json.dumps(Devices))
+                    else:
+                        print(f"[!] 未知操作类型: {data['Cap Operator']}")
+                        sub_socket.send_string("[!] 未知操作类型")
+                else:
+                    print(f"[!] 未知发送类型: {data['Send Type']}")
+                    sub_socket.send_string("[!] 未知发送类型")
+            if time.time() - last_timer_send >= config.echo_time:
+                capsList = CapabilityManager.CapabilityManager.getCapability()
+                caps = len(capsList)
+                echo_message = {
+                    "Message Type": config.echo_type,
+                    "CapsList": capsList,
+                    "Caps": caps,
+                    "Source Vehicle ID": config.source_id,
+                    "Peer Vehicle ID": config.board_id
+                }
+                pub_socket.send_string(json.dumps(echo_message))
+                print(f"[Core] 发送 echo 消息: {echo_message}")
+                last_timer_send = time.time()
         except Exception as e:
             print(f"[!] core_pub2obu 发生错误: {e}")
 
@@ -107,12 +142,23 @@ def core_sub2obu():
             message = sub_socket.recv_string()
             print(f"[Core] 收到消息 {count}: {message}")
             count += 1
-
-            # 直接转发消息
-            pub_socket.send_string(message)
-
+            data = json.loads(message)
+            # 消息处理
+            if data["Message Type"] == config.echo_type:
+                CollaborationGraphManager.CollaborationGraphManager.getInstance().updateMapping(data["Source Vehicle ID"], data["CapsList"])
+            elif data["Message Type"] == config.sub_type or data["Message Type"] == config.pub_type:
+                topic = data["Topic"]
+                topic_prefixed_message = f"{topic} {json.dumps(data, ensure_ascii=False)}"
+                pub_socket.send_string(topic_prefixed_message)
+            else:
+                print(f"[!] 未知消息类型: {data['Message Type']}")
         except Exception as e:
             print(f"[!] core_sub2obu 发生错误: {e}")
+
+def core_echoPub():
+    pub_socket = context.socket(zmq.PUB)
+    pub_socket.bind(f"tcp://*:{config.obu_sub_port}")
+    
 
 def main():
     """启动所有线程"""
