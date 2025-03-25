@@ -15,12 +15,12 @@ def test_singleton_with_lock_and_deduplication():
     # 定义两个线程函数
     def worker1():
         for i in range(100):
-            manager.putCapability(i, i*100, 1, 1)  # 插入能力
+            manager.putCapability(i, i*100, i%50, i%20)  # 插入能力
             time.sleep(0.01)
 
     def worker2():
         for i in range(100):
-            manager.putCapability(i, i*102, 1, 2)  # 插入能力
+            manager.updateBroadcast(i, i*100, i%50, i%20, (bool)(i%2))
             time.sleep(0.01)
 
     # 启动两个线程

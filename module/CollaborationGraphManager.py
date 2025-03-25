@@ -47,6 +47,6 @@ class CollaborationGraphManager:
     def getDevices(self, capId: int, capVersion: int, capConfig: int):
         """查询并返回对应 {capId, capVersion, capConfig} 的所有 deviceId"""
         key = (capId, capVersion, capConfig)
-        with CollaborationGraphManager._lock:
+        with CollaborationGraphManager._lock: 
             # 如果该键存在，返回对应的 deviceId 列表，否则返回空列表
             return self.mapping.get(key, [])
