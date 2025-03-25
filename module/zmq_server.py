@@ -12,7 +12,7 @@ class ICPServer:
         :param port: 服务器端口号
         :param app_id: 应用标识符
         """
-        if not app_id:
+        if app_id is None:
             raise ValueError("app_id 不能为空！请提供一个有效的应用标识符。")
         self.app_id = app_id
         self.context = zmq.Context()
@@ -20,134 +20,312 @@ class ICPServer:
         self.socket.connect(f"tcp://{config.selfip}:{config.send_sub_port}")
         print(f"Server started")
 
-    def send_pub_message(self, 
-                    reliability:int,
-                    data:str, 
-                    qos:int, 
-                    operator:int, 
-                    topic:str, 
-                    source_id:str, 
-                    peer_id:str, 
-                    extension=None):
+    def AppMessage(self, 
+                   CapID:int,
+                   CapVersion:int,
+                   CapConfig:int,
+                   act:int,
+                   tid:0       
+                    ):
         """
-        发送消息方法
-        :param reliability: 可靠性，默认为 INT
-        :param data: 消息数据，默认为空字符串
-        :param caps_list: 可选，支持的能力列表，默认为 None
-        :param topic: 可选，订阅主题，默认为空字符串
-        :param qos: 可选，传输级别的 QoS 等级，默认为 0
-        :param operator: 必选，操作，默认为空字符串
-        :param source_id: 可选，源车辆 ID，默认为空字符串
-        :param peer_id: 可选，对等车辆 ID，默认为空字符串
-        :param extension: 可选，扩展字段，默认为 None
+        构建应用消息
+        :param CapID: 能力ID
+        :param CapVersion: 能力版本
+        :param act: 操作
         """
-        if data is None or reliability is None or operator is None or topic is None or source_id is None or peer_id is None:
-            raise ValueError("data, reliability, operator, topic, source_id, peer_id 不能为空！请提供有效的数据。")
+        if CapID is None or CapVersion is None or act is None or CapConfig is None or tid is None:
+            raise ValueError("CapID, CapVersion, CapConfig, Action 和 tid 不能为空！请提供有效的数据。")
+        CapID = CapID & 0xFFFF
+        CapVersion = CapVersion & 0xF
+        CapConfig = CapConfig & 0xFFF
         message = {
-            "Send Type":0,
-            "ApplicationIdentifier": self.app_id,
-            "Reliability": reliability,
-            "Message Type": 3,
-            "Data": data,
-            "Topic": topic,
-            "Operator": operator,
-            "Source Vehicle ID": source_id,
-            "Peer Vehicle ID": peer_id,
-            "Extension": extension or {}
+            "mid":config.appReg,
+            "app_id": self.app_id,
+            "tid": tid,
+            "msg":{
+                "capID": CapID,
+                "capVersion": CapVersion,
+                "capConfig": CapConfig,
+                "act": act
+            }
         }
-        # 将字典转换为 JSON 格式并发送
-        if qos:
-            message["Qos"] = qos
-        message_str = json.dumps(message, ensure_ascii=False)
-        message["Length"] = len(message_str.encode('utf-8'))
-        self.socket.send_json(message)
-    def send_sub_message(self, 
-                    reliability:int,
-                    qos:int, 
-                    operator:int, 
-                    topic:str, 
-                    source_id:str, 
-                    peer_id:str, 
-                    extension=None):
-        """
-        发送消息方法
-        :param data: 消息数据，默认为空字符串
-        :param caps_list: 可选，支持的能力列表，默认为 None
-        :param topic: 可选，订阅主题，默认为空字符串
-        :param qos: 可选，传输级别的 QoS 等级，默认为 0
-        :param operator: 必选，操作，默认为空字符串
-        :param source_id: 可选，源车辆 ID，默认为空字符串
-        :param peer_id: 可选，对等车辆 ID，默认为空字符串
-        :param extension: 可选，扩展字段，默认为 None
-        """
-        if reliability is None or operator is None or topic is None or source_id is None or peer_id is None:
-            raise ValueError("reliability, qos, operator, topic 不能为空！请提供有效的数据。")
-        message = {
-            "Send Type":0,
-            "ApplicationIdentifier": self.app_id,
-            "Reliability": reliability,
-            "Message Type": 2,
-            "Topic": topic,
-            "Operator": operator,
-            "Qos": qos,
-            "Source Vehicle ID": source_id,
-            "Peer Vehicle ID": peer_id,
-            "Extension": extension or {}
-        }
-        # 将字典转换为 JSON 格式并发送
-        message_str = json.dumps(message, ensure_ascii=False)
-        message["Length"] = len(message_str.encode('utf-8'))
-        self.socket.send_json(message)
+        self.socket.send_string(message)
     
-    def send_caps_message(self,
-                          capId:int,
-                          capVersion:int,
-                          capConfig:int          
-                            ):
-        if capId is None or capVersion is None or capConfig is None:
-            raise ValueError("capId, capVersion, capConfig ,capOperator 不能为空！请提供有效的数据。")
+    def brocastPub(self,
+                   tid:0,
+                   oid:int,
+                   topic:int,
+                   coopMap:bytes
+                   ):
+        """
+        广播发布消息
+        :param tid: 事物标识（transaction id）	应用与控制层之间的请求与应答消息的关联，随机初始化并自增，保证唯一
+        :param oid: 源端标识	广播SUB的源端节点标识（仅通信控制->应用接口携带）
+        :param topic: 能力标识	广播订购的topic
+        :param coopMap: 置信图/协作图	携带用于发送的置信图或协作图
+        """
+        if oid is None or topic is None or coopMap is None:
+            raise ValueError("oid, topic 和 cooMap 不能为空！请提供有效的数据。")
         message = {
-            "Send Type":1,
-            "ApplicationIdentifier": self.app_id,
-            "Cap ID": capId,
-            "Cap Version": capVersion,
-            "Cap Configuration": capConfig,
-            "Cap Operator": 0
+            "mid":config.boardCastPub,
+            "app_id": self.app_id,
+            "tid": tid,
+            "msg":{
+                "oid": oid,
+                "topic": topic,
+                "coopMap": coopMap
+            }
         }
-        self.socket.send_json(message)
-    def delete_caps_message(self,
-                          capId:int,
-                          capVersion:int,
-                          capConfig:int          
-                            ):
-        if capId is None or capVersion is None or capConfig is None:
-            raise ValueError("capId, capVersion, capConfig ,capOperator 不能为空！请提供有效的数据。")
-        message = {
-            "Send Type":1,
-            "ApplicationIdentifier": self.app_id,
-            "Cap ID": capId,
-            "Cap Version": capVersion,
-            "Cap Configuration": capConfig,
-            "Cap Operator": 1
-        }
-        self.socket.send_json(message)
-    def get_maps_message(self,
-                          capId:int,
-                          capVersion:int,
-                          capConfig:int          
-                            ):
-        if capId is None or capVersion is None or capConfig is None:
-            raise ValueError("capId, capVersion, capConfig ,capOperator 不能为空！请提供有效的数据。")
-        message = {
-            "Send Type":1,
-            "ApplicationIdentifier": self.app_id,
-            "Cap ID": capId,
-            "Cap Version": capVersion,
-            "Cap Configuration": capConfig,
-            "Cap Operator": 2
-        }
-        self.socket.send_json(message)
+        self.socket.send_string(message)
+    
+    def brocastSub(self,
+                   tid:0,
+                   oid:int,
+                   topic:int,
+                   context:int,
+                   coopMap:bytes,
+                   bearCap:int
+                   ):
+        """
+        广播订购消息
+        :param tid: 事物标识（transaction id）	应用与控制层之间的请求与应答消息的关联，随机初始化并自增，保证唯一
+        :param oid: 源端标识	广播SUB的源端节点标识（仅通信控制->应用接口携带）
+        :param topic: 能力标识	广播订购的topic
+        :param context: 会上下文标识	应用创建的用于区分对话的标识
+        :param coopMap: 置信图/协作图	携带用于发送的置信图或协作图
+        :param bearcap: 承载能力描述	1：要求携带用于描述自身承载能力的信息
 
+        """
+        if oid is None or topic is None or context is None or coopMap is None or bearCap is None:
+            raise ValueError("oid, topic, context, coopMap 和 bearcap 不能为空！请提供有效的数据。")
+        message = {
+            "mid":config.boardCastSub,
+            "app_id": self.app_id,
+            "tid": tid,
+            "msg":{
+                "oid": oid,
+                "topic": topic,
+                "context": context,
+                "coopMap": coopMap,
+                "bearCap": bearCap
+            }
+        }
+        self.socket.send_string(message)
+    
+    def brocastSubnty(self,
+                     tid:0,
+                     oid:int,
+                     did:int,
+                     topic:int,
+                     context:int,
+                     coopMap:bytes,
+                     bearcap:int
+                     ):
+        """
+        广播订购消息
+        :param tid: 事物标识（transaction id）	应用与控制层之间的请求与应答消息的关联，随机初始化并自增，保证唯一
+        :param oid: 源端标识	广播SUB的源端节点标识（仅通信控制->应用接口携带）
+        :param did: 目的端标识	广播SUB的目的端节点标识（仅通信控制->应用接口携带）
+        :param topic: 能力标识	广播订购的topic
+        :param context: 会上下文标识	应用创建的用于区分对话的标识
+        :param coopMap: 置信图/协作图	携带用于发送的置信图或协作图
+        :param bearcap: 承载能力描述	1：要求携带用于描述自身承载能力的信息
+        """
+        if oid is None or did is None or topic is None or context is None or coopMap is None or bearcap is None:
+            raise ValueError("oid, did, topic, context, coopMap 和 bearcap 不能为空！请提供有效的数据。")
+        message = {
+            "mid":config.boardCastSubNotify,
+            "app_id": self.app_id,
+            "tid": tid,
+            "msg":{
+                "oid": oid,
+                "did": did,
+                "topic": topic,
+                "context": context,
+                "coopMap": coopMap,
+                "bearcap": bearcap
+            }
+        }
+        self.socket.send_string(message)      
+        
+    def subMessage(self,
+                   tid:0,
+                   oid:int,
+                   did:list[int],
+                   topic:int,
+                   act:int,
+                   context:int,
+                   coopMap:bytes,
+                   bearInfo:int
+                   ):
+        """
+        订购消息
+        :param tid: 事物标识（transaction id）	应用与控制层之间的请求与应答消息的关联，随机初始化并自增，保证唯一
+        :param oid: 源端标识	广播SUB的源端节点标识（仅通信控制->应用接口携带）
+        :param did: 目的端标识	广播SUB的目的端节点标识（仅通信控制->应用接口携带）
+        :param topic: 能力标识	广播订购的topic
+        :param act: 操作	订购的操作
+        :param context: 会上下文标识	应用创建的用于区分对话的标识
+        :param coopMap: 置信图/协作图	携带用于发送的置信图或协作图
+        :param bearInfo: 承载地址描述	1：要求携带用于描述自身承载地址的信息
+        """
+        if oid is None or did is None or topic is None or act is None or context is None or coopMap is None or bearInfo is None:
+            raise ValueError("oid, did, topic, act, context, coopMap 和 bearcap 不能为空！请提供有效的数据。")
+        message = {
+            "mid":config.subScribe,
+            "app_id": self.app_id,
+            "tid": tid,
+            "msg":{
+                "oid": oid,
+                "did": did,
+                "topic": topic,
+                "act": act,
+                "context": context,
+                "coopMap": coopMap,
+                "bearinfo": bearInfo
+            }
+        }
+        self.socket.send_string(message)
+        
+    def notifyMessage(self,
+                      tid:0,
+                      oid:int,
+                      did:int,
+                      topic:int,
+                      act:int,
+                      context:int,
+                      coopMap:bytes,
+                      bearCap:int
+                      ):
+        """
+        通知消息
+        :param tid: 事物标识（transaction id）	应用与控制层之间的请求与应答消息的关联，随机初始化并自增，保证唯一
+        :param oid: 源端标识	广播SUB的源端节点标识（仅通信控制->应用接口携带）
+        :param did: 目的端标识	广播SUB的目的端节点标识（仅通信控制->应用接口携带）
+        :param topic: 能力标识	广播订购的topic
+        :param act: 操作	订购的操作
+        :param context: 会上下文标识	应用创建的用于区分对话的标识
+        :param coopMap: 置信图/协作图	携带用于发送的置信图或协作图
+        :param bearCap: 承载能力描述	1：要求携带用于描述自身承载能力的信息
+        """
+        if oid is None or did is None or topic is None or act is None or context is None or coopMap is None or bearCap is None:
+            raise ValueError("oid, did, topic, act, context, coopMap 和 bearCap 不能为空！请提供有效的数据。")
+        message = {
+            "mid":config.notify,
+            "app_id": self.app_id,
+            "tid": tid,
+            "msg":{ 
+                "oid": oid,
+                "did": did,
+                "topic": topic,
+                "act": act,
+                "context": context,
+                "coopMap": coopMap,
+                "bearCap": bearCap
+            }
+        }
+        self.socket.send_string(message)
+    
+    def streamSendreq(self,
+                      did:int,
+                      context:int,
+                      rl:1,
+                      pt:int
+                      ):
+        """
+        流发送请求
+        :param did: 目的端标识	广播SUB的目的端节点标识（仅通信控制->应用接口携带）
+        :param context: 会上下文标识	应用创建的用于区分对话的标识
+        :param rl: 流数据的质量保证	雷达数据等默认需要 RL=1
+        :param pt: 数据类型	请求数据类型
+        """
+        if did is None or context is None or rl is None or pt is None:
+            raise ValueError("did, context, rl 和 pt 不能为空！请提供有效的数据。")
+        message = {
+            "mid":config.streamSendreq,
+            "app_id": self.app_id,
+            "msg":{
+                "did": did,
+                "context": context,
+                "rl": rl,
+                "pt": pt
+            }
+        }
+        self.socket.send_string(message)
+    def streamSend(self,
+                   sid:int,
+                   data:bytes
+                   ):
+        """
+        流发送
+        :param sid: 流标识	流标识
+        :param data: 数据	发送的数据
+        """
+        if sid is None or data is None:
+            raise ValueError("sid 和 data 不能为空！请提供有效的数据。")
+        message = {
+            "mid":config.streamSend,
+            "app_id": self.app_id,
+            "msg":{
+                "sid": sid,
+                "data": data
+            }
+        }
+        self.socket.send_string(message)
+    def streamSendend(self,
+                      did:int,
+                      context:int,
+                      sid:int
+                      ):
+        """
+        流发送结束
+        :param did: 目的端标识	广播SUB的目的端节点标识（仅通信控制->应用接口携带）
+        :param context: 会上下文标识	应用创建的用于区分对话的标识
+        :param sid: 流标识	流标识
+        """
+        if sid is None or did is None or context is None:
+            raise ValueError("sid, did 和 context 不能为空！请提供有效的数据。")
+        message = {
+            "mid":config.streamSendend,
+            "app_id": self.app_id,
+            "msg":{
+                "did": did,
+                "context": context,
+                "sid": sid
+            }
+        }
+        self.socket.send_string(message)
+    
+    def sendFile(self,
+                 did:int,
+                 context:int,
+                 rl:1,
+                 pt:int,
+                 file:str
+                 ):
+        """
+        发送文件
+        :param did: 目的端标识	广播SUB的目的端节点标识（仅通信控制->应用接口携带）
+        :param context: 会上下文标识	应用创建的用于区分对话的标识
+        :param rl: 流数据的质量保证	雷达数据等默认需要 RL=1
+        :param pt: 数据类型	请求数据类型
+        :param file:文件路径	发送文件的存储路径与文件名
+        """
+        if did is None or context is None or rl is None or pt is None or file is None:
+            raise ValueError("did, context, rl, pt 和 file 不能为空！请提供有效的数据。")
+        message = {
+            "mid":config.sendFile,
+            "app_id": self.app_id,
+            "msg":{
+                "did": did,
+                "context": context,
+                "rl": rl,
+                "pt": pt,
+                "file": file
+            }
+        }
+        self.socket.send_string(message)
+        
 class ICPClient:
     def __init__(self):
         """
