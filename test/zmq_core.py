@@ -6,11 +6,12 @@ import sys
 import uuid
 import glob
 import time
-parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-sys.path.append(parent_dir)
+sys.path.append("/home/nvidia/mydisk/czl/InteroperationApp/module")
 import module.CapabilityManager as CapabilityManager
 import module.CollaborationGraphManager as CollaborationGraphManager
 import config
+import module.TLV
+from module.sessionManager import SessionManager
 # 创建数据目录
 os.makedirs(config.data_dir, exist_ok=True)
 
@@ -19,6 +20,7 @@ MAX_SIZE = 1.4 * 1024
 MAX_FILES = 12
 caps_instance = CapabilityManager.CapabilityManager()
 maps_instance = CollaborationGraphManager.CollaborationGraphManager()
+SM_instance = SessionManager.getInstance()
 # ZMQ 上下文
 context = zmq.Context()
 
@@ -89,15 +91,151 @@ def core_sub2app():
                             flag = caps_instance.deleteCapability(appid, data["capId"], data["capVersion"], data["capConfig"])
                             msg["result"] = config.delack if flag else config.delnack
                         if data["act"] == config.appActopen:
-                            #待处理todo
-                            pass
+                            flag = caps_instance.updateBroadcast(appid, data["capId"], data["capVersion"], data["capConfig"], True)
+                            msg["result"] = config.openack if flag else config.opennack
                         if data["act"] == config.appActclose:
-                            #待处理todo
-                            pass
+                            flag = caps_instance.updateBroadcast(appid, data["capId"], data["capVersion"], data["capConfig"], False)
+                            msg["result"] = config.closeack if flag else config.closenack
                         pub2app_socket.send_string(msg)
                     case config.boardCastPub:
-                        sendMsg = {}
-                            
+                        data = message["msg"]
+                        sendMsg = config.pubMsg
+                        sendMsg["RT"] = 0
+                        sendMsg["SourceId"] = data["oid"]
+                        sendMsg["DestId"] = ""
+                        sendMsg["OP"] = 0
+                        sendMsg["Topic"] = data["topic"]
+                        sendMsg["PayloadType"] = config.type_common
+                        sendMsg["EncodeMode"] = config.encodeASN
+                        TLVmsg = {
+                            "CommonDataType":data["coopMapType"],
+                            "CommonData":data["coopMap"]
+                        }
+                        TLVm = module.TLV.TLVEncoderDecoder.encode(TLVmsg)
+                        sendMsg["Payload"] = TLVm
+                        byte_TLV = TLVm.encode("utf-8")
+                        sendMsg["PayloadLength"] = len(byte_TLV)
+                        pub2obu_socket.send_json(sendMsg)
+                        
+                    case config.boardCastSub:
+                        data = message["msg"]
+                        #会话管理。。。
+                        smFlag = SM_instance.update_state(data["mid"], data["context"])
+                        if smFlag:
+                            print(f"当前会话状态: {SM_instance.sessions}")
+                        else:
+                            print(f"会话状态更新失败")
+                        sendMsg = config.subMsg
+                        sendMsg["RT"] = 0
+                        sendMsg["SourceId"] = data["oid"]
+                        sendMsg["DestId"] = ""
+                        sendMsg["OP"] = 0
+                        sendMsg["Topic"] = data["topic"]
+                        sendMsg["PayloadType"] = config.type_common
+                        sendMsg["EncodeMode"] = config.encodeASN
+                        TLVmsg = {
+                            "CommonDataType":data["coopMapType"],
+                            "CommonData":data["coopMap"],
+                            "BearFlag":1 if data["bearCap"] == 1 else 0,
+                            "ContextId":data["context"]
+                        }
+                        TLVm = module.TLV.TLVEncoderDecoder.encode(TLVmsg)
+                        sendMsg["Payload"] = TLVm
+                        byte_TLV = TLVm.encode("utf-8")
+                        sendMsg["PayloadLength"] = len(byte_TLV)
+                        pub2obu_socket.send_json(sendMsg)
+                    
+                    case config.boardCastSubNotify:
+                        data = message["msg"]
+                        #会话管理。。。
+                        smFlag = SM_instance.update_state(data["mid"], data["context"])
+                        if smFlag:
+                            print(f"当前会话状态: {SM_instance.sessions}")
+                        else:
+                            print(f"会话状态更新失败")
+                        sendMsg = config.pubMsg
+                        sendMsg["RT"] = 1
+                        sendMsg["SourceId"] = data["oid"]
+                        sendMsg["DestId"] = data["did"]
+                        sendMsg["OP"] = 0
+                        sendMsg["Topic"] = data["topic"]
+                        sendMsg["PayloadType"] = config.type_common
+                        sendMsg["EncodeMode"] = config.encodeASN
+                        TLVmsg = {
+                            "CommonDataType":data["coopMapType"],
+                            "CommonData":data["coopMap"],
+                            "BearFlag":1 if data["bearCap"] == 1 else 0,
+                            "ContextId":data["context"],
+                            "Midact":config.boardCastSub
+                        }
+                        TLVm = module.TLV.TLVEncoderDecoder.encode(TLVmsg)
+                        sendMsg["Payload"] = TLVm
+                        byte_TLV = TLVm.encode("utf-8")
+                        sendMsg["PayloadLength"] = len(byte_TLV)
+                        pub2obu_socket.send_json(sendMsg)
+                    
+                    case config.subScribe:
+                        data = message["msg"]
+                        #会话管理
+                        smFlag = SM_instance.update_state(data["mid"], data["context"], data["act"])
+                        if smFlag:
+                            print(f"当前会话状态: {SM_instance.sessions}")
+                        else:
+                            print(f"会话状态更新失败")
+                        sendMsg = config.subMsg
+                        sendMsg["RT"] = 1
+                        sendMsg["SourceId"] = data["oid"]
+                        sendMsg["DestId"] = data["did"]
+                        sendMsg["OP"] = data["act"]
+                        sendMsg["Topic"] = data["topic"]
+                        sendMsg["PayloadType"] = config.type_common
+                        sendMsg["EncodeMode"] = config.encodeASN
+                        TLVmsg = {
+                            "CommonDataType":data["coopMapType"],
+                            "CommonData":data["coopMap"],
+                            "BearFlag":2 if data["bearinfo"] == 1 else 0,
+                            "ContextId":data["context"],
+                            "Midact":config.subScribe
+                        }
+                        TLVm = module.TLV.TLVEncoderDecoder.encode(TLVmsg)
+                        sendMsg["Payload"] = TLVm
+                        byte_TLV = TLVm.encode("utf-8")
+                        sendMsg["PayloadLength"] = len(byte_TLV)
+                        pub2obu_socket.send_json(sendMsg)
+                        
+                    case config.notify:
+                        data = message["msg"]
+                        #会话管理
+                        smFlag = SM_instance.update_state(data["mid"], data["context"], data["act"])
+                        if smFlag:
+                            print(f"当前会话状态: {SM_instance.sessions}")
+                        else:
+                            print(f"会话状态更新失败")
+                        sendMsg = config.pubMsg
+                        sendMsg["RT"] = 1
+                        sendMsg["SourceId"] = data["oid"]
+                        sendMsg["DestId"] = data["did"]
+                        sendMsg["OP"] = data["act"]
+                        sendMsg["Topic"] = data["topic"]
+                        sendMsg["PayloadType"] = config.type_common
+                        sendMsg["EncodeMode"] = config.encodeASN
+                        TLVmsg = {
+                            "CommonDataType":data["coopMapType"],
+                            "CommonData":data["coopMap"],
+                            "BearFlag":1 if data["bearCap"] == 1 else 0,
+                            "ContextId":data["context"],
+                            "Midact":config.notify
+                        }
+                        TLVm = module.TLV.TLVEncoderDecoder.encode(TLVmsg)
+                        sendMsg["Payload"] = TLVm
+                        byte_TLV = TLVm.encode("utf-8")
+                        sendMsg["PayloadLength"] = len(byte_TLV)
+                        pub2obu_socket.send_json(sendMsg)
+                        
+                    #todo：流数据处理 101-107
+                    
+                    #todo：文件处理 111-113
+                        
                         
             """if time.time() - last_timer_send >= config.echo_time:
                 capsList = caps_instance.getCapability()
@@ -137,6 +275,12 @@ def core_sub2obu():
             if data["Message Type"] == config.echo_type:
                 CollaborationGraphManager.CollaborationGraphManager.getInstance().updateMapping(data["Source Vehicle ID"], data["CapsList"])
             elif data["Message Type"] == config.sub_type or data["Message Type"] == config.pub_type:
+                TLVm = data["Payload"]
+                TLVmsg = module.TLV.TLVEncoderDecoder.decode(TLVm)
+                if data["OP"] is None:
+                    SM_instance.update_state(TLVmsg["Midact"], TLVmsg["ContextId"])
+                else:
+                    SM_instance.update_state(TLVmsg["Midact"], TLVmsg["ContextId"], data["OP"])
                 topic = data["Topic"]
                 topic_prefixed_message = f"{topic} {json.dumps(data, ensure_ascii=False)}"
                 pub2app_socket.send_string(topic_prefixed_message)

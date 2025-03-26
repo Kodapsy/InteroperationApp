@@ -53,9 +53,10 @@ class ICPServer:
     
     def brocastPub(self,
                    tid:0,
-                   oid:int,
+                   oid:str,
                    topic:int,
-                   coopMap:bytes
+                   coopMap:bytes,
+                   coopMapTpye:int
                    ):
         """
         广播发布消息
@@ -64,7 +65,7 @@ class ICPServer:
         :param topic: 能力标识	广播订购的topic
         :param coopMap: 置信图/协作图	携带用于发送的置信图或协作图
         """
-        if oid is None or topic is None or coopMap is None:
+        if oid is None or topic is None or coopMap is None or coopMapTpye is None:
             raise ValueError("oid, topic 和 cooMap 不能为空！请提供有效的数据。")
         message = {
             "mid":config.boardCastPub,
@@ -73,17 +74,19 @@ class ICPServer:
             "msg":{
                 "oid": oid,
                 "topic": topic,
-                "coopMap": coopMap
+                "coopMap": coopMap,
+                "coopMapTpye": coopMapTpye
             }
         }
         self.socket.send_string(message)
     
     def brocastSub(self,
                    tid:0,
-                   oid:int,
+                   oid:str,
                    topic:int,
-                   context:int,
+                   context:str,
                    coopMap:bytes,
+                   coopMapType:int,
                    bearCap:int
                    ):
         """
@@ -96,7 +99,7 @@ class ICPServer:
         :param bearcap: 承载能力描述	1：要求携带用于描述自身承载能力的信息
 
         """
-        if oid is None or topic is None or context is None or coopMap is None or bearCap is None:
+        if oid is None or topic is None or context is None or coopMap is None or bearCap is None or coopMapType is None:
             raise ValueError("oid, topic, context, coopMap 和 bearcap 不能为空！请提供有效的数据。")
         message = {
             "mid":config.boardCastSub,
@@ -107,6 +110,7 @@ class ICPServer:
                 "topic": topic,
                 "context": context,
                 "coopMap": coopMap,
+                "coopMapType": coopMapType,
                 "bearCap": bearCap
             }
         }
@@ -114,11 +118,12 @@ class ICPServer:
     
     def brocastSubnty(self,
                      tid:0,
-                     oid:int,
-                     did:int,
+                     oid:str,
+                     did:str,
                      topic:int,
-                     context:int,
+                     context:str,
                      coopMap:bytes,
+                     coopMapType:int,
                      bearcap:int
                      ):
         """
@@ -131,7 +136,7 @@ class ICPServer:
         :param coopMap: 置信图/协作图	携带用于发送的置信图或协作图
         :param bearcap: 承载能力描述	1：要求携带用于描述自身承载能力的信息
         """
-        if oid is None or did is None or topic is None or context is None or coopMap is None or bearcap is None:
+        if oid is None or did is None or topic is None or context is None or coopMap is None or bearcap is None or coopMapType is None:
             raise ValueError("oid, did, topic, context, coopMap 和 bearcap 不能为空！请提供有效的数据。")
         message = {
             "mid":config.boardCastSubNotify,
@@ -143,6 +148,7 @@ class ICPServer:
                 "topic": topic,
                 "context": context,
                 "coopMap": coopMap,
+                "coopMapType": coopMapType,
                 "bearcap": bearcap
             }
         }
@@ -150,12 +156,13 @@ class ICPServer:
         
     def subMessage(self,
                    tid:0,
-                   oid:int,
-                   did:list[int],
+                   oid:str,
+                   did:list[str],
                    topic:int,
                    act:int,
-                   context:int,
+                   context:str,
                    coopMap:bytes,
+                   coopMapType:int,
                    bearInfo:int
                    ):
         """
@@ -164,12 +171,11 @@ class ICPServer:
         :param oid: 源端标识	广播SUB的源端节点标识（仅通信控制->应用接口携带）
         :param did: 目的端标识	广播SUB的目的端节点标识（仅通信控制->应用接口携带）
         :param topic: 能力标识	广播订购的topic
-        :param act: 操作	订购的操作
         :param context: 会上下文标识	应用创建的用于区分对话的标识
         :param coopMap: 置信图/协作图	携带用于发送的置信图或协作图
         :param bearInfo: 承载地址描述	1：要求携带用于描述自身承载地址的信息
         """
-        if oid is None or did is None or topic is None or act is None or context is None or coopMap is None or bearInfo is None:
+        if oid is None or did is None or topic is None or context is None or coopMap is None or bearInfo is None or coopMapType is None or act is None:
             raise ValueError("oid, did, topic, act, context, coopMap 和 bearcap 不能为空！请提供有效的数据。")
         message = {
             "mid":config.subScribe,
@@ -182,6 +188,7 @@ class ICPServer:
                 "act": act,
                 "context": context,
                 "coopMap": coopMap,
+                "coopMapType": coopMapType,
                 "bearinfo": bearInfo
             }
         }
@@ -189,12 +196,13 @@ class ICPServer:
         
     def notifyMessage(self,
                       tid:0,
-                      oid:int,
-                      did:int,
+                      oid:str,
+                      did:str,
                       topic:int,
                       act:int,
-                      context:int,
+                      context:str,
                       coopMap:bytes,
+                      coopMapType:int,
                       bearCap:int
                       ):
         """
@@ -203,12 +211,11 @@ class ICPServer:
         :param oid: 源端标识	广播SUB的源端节点标识（仅通信控制->应用接口携带）
         :param did: 目的端标识	广播SUB的目的端节点标识（仅通信控制->应用接口携带）
         :param topic: 能力标识	广播订购的topic
-        :param act: 操作	订购的操作
         :param context: 会上下文标识	应用创建的用于区分对话的标识
         :param coopMap: 置信图/协作图	携带用于发送的置信图或协作图
         :param bearCap: 承载能力描述	1：要求携带用于描述自身承载能力的信息
         """
-        if oid is None or did is None or topic is None or act is None or context is None or coopMap is None or bearCap is None:
+        if oid is None or did is None or topic is None or context is None or coopMap is None or bearCap is None or coopMapType is None or act is None:
             raise ValueError("oid, did, topic, act, context, coopMap 和 bearCap 不能为空！请提供有效的数据。")
         message = {
             "mid":config.notify,
@@ -221,14 +228,15 @@ class ICPServer:
                 "act": act,
                 "context": context,
                 "coopMap": coopMap,
+                "coopMapType": coopMapType,
                 "bearCap": bearCap
             }
         }
         self.socket.send_string(message)
     
     def streamSendreq(self,
-                      did:int,
-                      context:int,
+                      did:str,
+                      context:str,
                       rl:1,
                       pt:int
                       ):
@@ -253,7 +261,7 @@ class ICPServer:
         }
         self.socket.send_string(message)
     def streamSend(self,
-                   sid:int,
+                   sid:str,
                    data:bytes
                    ):
         """
@@ -273,9 +281,9 @@ class ICPServer:
         }
         self.socket.send_string(message)
     def streamSendend(self,
-                      did:int,
-                      context:int,
-                      sid:int
+                      did:str,
+                      context:str,
+                      sid:str
                       ):
         """
         流发送结束
@@ -298,7 +306,7 @@ class ICPServer:
     
     def sendFile(self,
                  did:int,
-                 context:int,
+                 context:str,
                  rl:1,
                  pt:int,
                  file:str

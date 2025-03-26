@@ -57,14 +57,35 @@ pubMsg = {
     "V":0,
     "RT":int,
     "Message Type":pub_type,
-    "Lenth":int,
+    "Length":int,
     "SourceID":str,
-    "DestID":str,
+    "DestID":None,
     "OP":int,
-    "PacketID":int,
     "Topic":int,
     "Payload":None,
     "PayloadType":int,
-    "PayloadLenth":int,
+    "PayloadLength":int,
     "EncodeMode":int,
 }
+
+subMsg = {
+    "V":0,
+    "RT":int,
+    "Message Type":sub_type,
+    "Length":int,
+    "SourceID":str,
+    "DestID":None,
+    "OP":int,
+    "Topic":int,
+    "Payload":None,
+    "PayloadType":int,
+    "PayloadLength":int,
+    "EncodeMode":int,
+}
+type_common = 2
+type_data = 1
+type_transD = 0
+encodeBin = 0
+encodeASN = 1
+encodePro = 2
+encodeASCII = 3
