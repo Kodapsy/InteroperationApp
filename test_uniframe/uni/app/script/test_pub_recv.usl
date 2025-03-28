@@ -51,24 +51,22 @@ if isdata != 'use itp':
         m.body.destId = j.get("Peer Vehicle ID",-1)
     elif message_type == 2:
         m.id = m.ids.ICP_SUB
-        m.body.op = j.get("Operator",-1)
+        m.body.op = j.get("OP",-1)
         m.body.topic = j.get("Topic",-1)
-        m.body.packetQoS = j.get("QoS",-1)
-        m.body.sourceId = j.get("Source Vehicle ID",-1)
-        m.body.destId = j.get("Peer Vehicle ID",-1)
+        m.body.sourceId = j.get("SourceId",-1)
+        m.body.destId = j.get("DestID",-1)
     elif message_type == 3:
         m.id = m.ids.ICP_PUB
         m.body.needAck = True
-        m.body.op = j.get("Operator",-1)
+        m.body.op = j.get("OP",-1)
         m.body.topic = j.get("Topic",-1)
-        m.body.packetQoS = j.get("QoS",-1)
-        m.body.sourceId = j.get("Source Vehicle ID",-1)
-        m.body.destId = j.get("Peer Vehicle ID",-1)
-        m.body.payload = j.get("Data",-1)
+        m.body.sourceId = j.get("SourceId",-1)
+        m.body.destId = j.get("DestID",-1)
+        m.body.payload = j.get("Payload",-1)
     else:
         log("Unknown Message Type")
         exit()
-    #print(m)
+    print(m)
     # 发送消息
     send(m, "psaicp.so")
 else:

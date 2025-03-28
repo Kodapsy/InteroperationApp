@@ -19,7 +19,9 @@ class ICPServer:
         self.socket = self.context.socket(zmq.PUB)
         self.socket.connect(f"tcp://{config.selfip}:{config.send_sub_port}")
         print(f"Server started")
-
+    def send(self, message: dict):
+        print(f"Sending message: {message}")
+        self.socket.send_string(json.dumps(message, ensure_ascii=False))
     def AppMessage(self, 
                    CapID:int,
                    CapVersion:int,
@@ -49,14 +51,14 @@ class ICPServer:
                 "act": act
             }
         }
-        self.socket.send_string(message)
+        self.send(message)
     
     def brocastPub(self,
                    tid:0,
                    oid:str,
                    topic:int,
-                   coopMap:bytes,
-                   coopMapTpye:int
+                   coopMap:str,
+                   coopMapType:int
                    ):
         """
         广播发布消息
@@ -65,7 +67,7 @@ class ICPServer:
         :param topic: 能力标识	广播订购的topic
         :param coopMap: 置信图/协作图	携带用于发送的置信图或协作图
         """
-        if oid is None or topic is None or coopMap is None or coopMapTpye is None:
+        if oid is None or topic is None or coopMap is None or coopMapType is None:
             raise ValueError("oid, topic 和 cooMap 不能为空！请提供有效的数据。")
         message = {
             "mid":config.boardCastPub,
@@ -75,17 +77,17 @@ class ICPServer:
                 "oid": oid,
                 "topic": topic,
                 "coopMap": coopMap,
-                "coopMapTpye": coopMapTpye
+                "coopMapType": coopMapType
             }
         }
-        self.socket.send_string(message)
+        self.send(message)
     
     def brocastSub(self,
                    tid:0,
                    oid:str,
                    topic:int,
                    context:str,
-                   coopMap:bytes,
+                   coopMap:str,
                    coopMapType:int,
                    bearCap:int
                    ):
@@ -114,7 +116,7 @@ class ICPServer:
                 "bearCap": bearCap
             }
         }
-        self.socket.send_string(message)
+        self.send(message)
     
     def brocastSubnty(self,
                      tid:0,
@@ -122,7 +124,7 @@ class ICPServer:
                      did:str,
                      topic:int,
                      context:str,
-                     coopMap:bytes,
+                     coopMap:str,
                      coopMapType:int,
                      bearcap:int
                      ):
@@ -152,7 +154,7 @@ class ICPServer:
                 "bearcap": bearcap
             }
         }
-        self.socket.send_string(message)      
+        self.send(message)      
         
     def subMessage(self,
                    tid:0,
@@ -161,7 +163,7 @@ class ICPServer:
                    topic:int,
                    act:int,
                    context:str,
-                   coopMap:bytes,
+                   coopMap:str,
                    coopMapType:int,
                    bearInfo:int
                    ):
@@ -192,7 +194,7 @@ class ICPServer:
                 "bearinfo": bearInfo
             }
         }
-        self.socket.send_string(message)
+        self.send(message)
         
     def notifyMessage(self,
                       tid:0,
@@ -201,7 +203,7 @@ class ICPServer:
                       topic:int,
                       act:int,
                       context:str,
-                      coopMap:bytes,
+                      coopMap:str,
                       coopMapType:int,
                       bearCap:int
                       ):
@@ -232,7 +234,7 @@ class ICPServer:
                 "bearCap": bearCap
             }
         }
-        self.socket.send_string(message)
+        self.send(message)
     
     def streamSendreq(self,
                       did:str,
@@ -259,7 +261,7 @@ class ICPServer:
                 "pt": pt
             }
         }
-        self.socket.send_string(message)
+        self.send(message)
     def streamSend(self,
                    sid:str,
                    data:bytes
@@ -279,7 +281,7 @@ class ICPServer:
                 "data": data
             }
         }
-        self.socket.send_string(message)
+        self.send(message)
     def streamSendend(self,
                       did:str,
                       context:str,
@@ -302,7 +304,7 @@ class ICPServer:
                 "sid": sid
             }
         }
-        self.socket.send_string(message)
+        self.send(message)
     
     def sendFile(self,
                  did:int,
@@ -332,7 +334,7 @@ class ICPServer:
                 "file": file
             }
         }
-        self.socket.send_string(message)
+        self.send(message)
         
 class ICPClient:
     def __init__(self):

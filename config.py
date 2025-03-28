@@ -56,32 +56,32 @@ opennack = 7
 
 pubMsg = {
     "V":0,
-    "RT":int,
+    "RT":0,
     "Message Type":pub_type,
-    "Length":int,
-    "SourceID":str,
+    "Length":0,
+    "SourceID":"",
     "DestID":None,
-    "OP":int,
-    "Topic":int,
+    "OP":0,
+    "Topic":0,
     "Payload":None,
-    "PayloadType":int,
-    "PayloadLength":int,
-    "EncodeMode":int,
+    "PayloadType":0,
+    "PayloadLength":0,
+    "EncodeMode":0,
 }
 
 subMsg = {
     "V":0,
-    "RT":int,
+    "RT":0,
     "Message Type":sub_type,
-    "Length":int,
-    "SourceID":str,
+    "Length":0,
+    "SourceID":"",
     "DestID":None,
-    "OP":int,
-    "Topic":int,
+    "OP":0,
+    "Topic":0,
     "Payload":None,
-    "PayloadType":int,
-    "PayloadLength":int,
-    "EncodeMode":int,
+    "PayloadType":0,
+    "PayloadLength":0,
+    "EncodeMode":0,
 }
 type_common = 2
 type_data = 1

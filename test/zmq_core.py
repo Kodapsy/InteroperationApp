@@ -75,11 +75,25 @@ def core_sub2app():
         try:
             if sub_socket.poll(100):
                 message = sub_socket.recv_string()
+                print(f"[DEBUG] 收到原始消息: {message}")
+                try:
+                    message = json.loads(message)
+                except json.JSONDecodeError:
+                    print(f"[!] JSON 解码失败，跳过：{message}")
+                    continue
+
+                if not isinstance(message, dict):
+                    print(f"[!] 消息不是字典类型，跳过：{message}")
+                    continue
+
+                if "mid" not in message:
+                    print(f"[!] 消息缺少 'mid' 字段，跳过：{message}")
+                    continue
                 print(f"[Core] 收到消息 {count}")
                 count += 1
                 # 消息处理
                 mid = message["mid"]
-                appid = message["appid"]
+                appid = message["app_id"]
                 match mid:
                     case config.appReg:
                         tid = message["tid"]
@@ -97,10 +111,10 @@ def core_sub2app():
                         if data["act"] == config.appActclose:
                             flag = caps_instance.updateBroadcast(appid, data["capId"], data["capVersion"], data["capConfig"], False)
                             msg["result"] = config.closeack if flag else config.closenack
-                        pub2app_socket.send_string(msg)
+                        pub2app_socket.send_string(json.dumps(msg, ensure_ascii=False)) 
                     case config.boardCastPub:
                         data = message["msg"]
-                        sendMsg = config.pubMsg
+                        sendMsg = config.pubMsg.copy()
                         sendMsg["RT"] = 0
                         sendMsg["SourceId"] = data["oid"]
                         sendMsg["DestId"] = ""
@@ -121,12 +135,12 @@ def core_sub2app():
                     case config.boardCastSub:
                         data = message["msg"]
                         #会话管理。。。
-                        smFlag = SM_instance.update_state(data["mid"], data["context"])
+                        smFlag = SM_instance.update_state(message["mid"], data["context"])
                         if smFlag:
                             print(f"当前会话状态: {SM_instance.sessions}")
                         else:
                             print(f"会话状态更新失败")
-                        sendMsg = config.subMsg
+                        sendMsg = config.subMsg.copy()
                         sendMsg["RT"] = 0
                         sendMsg["SourceId"] = data["oid"]
                         sendMsg["DestId"] = ""
@@ -134,11 +148,18 @@ def core_sub2app():
                         sendMsg["Topic"] = data["topic"]
                         sendMsg["PayloadType"] = config.type_common
                         sendMsg["EncodeMode"] = config.encodeASN
+                        context_id = data["context"]
+                        # 清理空白字符、只保留0和1
+                        context_id = ''.join(c for c in context_id if c in '01')
+                        # 强制修剪为128位
+                        if len(context_id) > 128:
+                            print(f"[!] ContextId 超长，已截断: 原始 {len(context_id)} → 128")
+                            context_id = context_id[:128]
                         TLVmsg = {
                             "CommonDataType":data["coopMapType"],
                             "CommonData":data["coopMap"],
                             "BearFlag":1 if data["bearCap"] == 1 else 0,
-                            "ContextId":data["context"]
+                            "ContextId":context_id
                         }
                         TLVm = module.TLV.TLVEncoderDecoder.encode(TLVmsg)
                         sendMsg["Payload"] = TLVm
@@ -154,7 +175,7 @@ def core_sub2app():
                             print(f"当前会话状态: {SM_instance.sessions}")
                         else:
                             print(f"会话状态更新失败")
-                        sendMsg = config.pubMsg
+                        sendMsg = config.pubMsg.copy()
                         sendMsg["RT"] = 1
                         sendMsg["SourceId"] = data["oid"]
                         sendMsg["DestId"] = data["did"]
@@ -183,7 +204,7 @@ def core_sub2app():
                             print(f"当前会话状态: {SM_instance.sessions}")
                         else:
                             print(f"会话状态更新失败")
-                        sendMsg = config.subMsg
+                        sendMsg = config.subMsg.copy()
                         sendMsg["RT"] = 1
                         sendMsg["SourceId"] = data["oid"]
                         sendMsg["DestId"] = data["did"]
@@ -213,7 +234,7 @@ def core_sub2app():
                             print(f"当前会话状态: {SM_instance.sessions}")
                         else:
                             print(f"会话状态更新失败")
-                        sendMsg = config.pubMsg
+                        sendMsg = config.pubMsg.copy()
                         sendMsg["RT"] = 1
                         sendMsg["SourceId"] = data["oid"]
                         sendMsg["DestId"] = data["did"]

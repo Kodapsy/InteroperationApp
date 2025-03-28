@@ -1,103 +1,144 @@
+import time
+import json
 import sys
-import os
-parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-sys.path.append(parent_dir)
+sys.path.append("/home/nvidia/mydisk/czl/InteroperationApp")
+from module.zmq_server import ICPServer, ICPClient
 
-import config
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-sys.path.append(os.path.join(project_root, "module"))
-
-from zmq_server import ICPServer 
-
-def read_json_file():
-    """读取 JSON 文件"""
-    data_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../data"))
-    file_path = os.path.join(data_dir, "tensor_data_small.json")
-    try:
-        with open(file_path, 'r', encoding='utf-8') as file:
-            data = file.read().strip()  # 直接读取文件内容为字符串
-            return data
-    except Exception as e:
-        print(f"Error reading JSON file: {e}")
-        return None
-
-if __name__ == "__main__":
-    server = ICPServer(app_id="test")
+def main():
+    print("🚀 ICPServer 测试程序启动")
+    app_id = input("请输入 app_id（默认 test_app）: ").strip() or "test_app"
+    server = ICPServer(app_id=app_id)
+    client = ICPClient()
 
     while True:
+        print("\n请选择操作类型:")
+        print("1. 注册/注销能力 (AppMessage)")
+        print("2. 广播发布 (brocastPub)")
+        print("3. 广播订购 (brocastSub)")
+        print("4. 广播订购通知 (brocastSubnty)")
+        print("5. 精准订阅 (subMessage)")
+        print("6. 精准通知 (notifyMessage)")
+        print("7. 流发送请求 (streamSendreq)")
+        print("8. 流发送 (streamSend)")
+        print("9. 流发送结束 (streamSendend)")
+        print("10. 文件发送 (sendFile)")
+        print("0. 退出")
+
         try:
-            # 输入消息类型
-            message_type = int(input("Enter message type (1-3) or -1 to exit: ").strip())
-            if message_type == -1:
-                print("Publisher shutting down.")
-                break
-            if message_type not in [1, 2, 3]:
-                print("Invalid message type. Please enter a number between 1 and 3.")
-                continue
-            
-            # 用户输入通用参数
-
-            # 发送不同类型的消息
-            if message_type == 2:
-                topic = input("Enter topic: ").strip()
-                reliability = int(input("Enter reliability (0 or 1): ").strip())
-                qos = int(input("Enter QoS level (0-2): ").strip())
-                operator = int(input("Enter operator: ").strip())
-                source_id = input("Enter source ID: ").strip()
-                peer_id = input("Enter peer ID: ").strip()
-                server.send_sub_message(
-                    reliability=reliability, 
-                    topic=topic, 
-                    qos=qos, 
-                    operator=operator, 
-                    source_id=source_id, 
-                    peer_id=peer_id
-                )
-                print(f"Message sent with type {message_type} to topic '{topic}'.")
-            elif message_type == 3:
-                topic = input("Enter topic: ").strip()
-                reliability = int(input("Enter reliability (0 or 1): ").strip())
-                qos = int(input("Enter QoS level (0-2): ").strip())
-                operator = int(input("Enter operator: ").strip())
-                source_id = input("Enter source ID: ").strip()
-                peer_id = input("Enter peer ID: ").strip()
-                msg = read_json_file()
-                if msg is None:
-                    print("Failed to read JSON data. Aborting send.")
-                    continue
-                server.send_pub_message(
-                    reliability=reliability, 
-                    data=msg, 
-                    topic=topic, 
-                    qos=qos, 
-                    operator=operator, 
-                    source_id=source_id, 
-                    peer_id=peer_id
-                )
-                print(f"Message sent with type {message_type} to topic '{topic}'.")
-            else:
-                capId = int(input("Enter capId: ").strip())
-                capVersion = int(input("Enter capVersion: ").strip())
-                capConfig = int(input("Enter capConfig: ").strip())
-                cap_operator = int(input("Enter cap_operator: ").strip())
-                if cap_operator == 0:
-                    server.send_caps_message(
-                        capId=capId, 
-                        capVersion=capVersion, 
-                        capConfig=capConfig, 
-                    )
-                elif cap_operator == 1:
-                    server.delete_caps_message(
-                        capId=capId, 
-                        capVersion=capVersion, 
-                        capConfig=capConfig, 
-                    )
-                else:
-                    server.get_maps_message(
-                        capId=capId, 
-                        capVersion=capVersion, 
-                        capConfig=capConfig, 
-                    )
-
+            choice = int(input("请输入操作编号: ").strip())
         except ValueError:
-            print("Invalid input. Please enter valid numbers where required.")
+            print("❌ 无效输入，请输入数字")
+            continue
+
+        if choice == 0:
+            print("✅ 程序退出")
+            break
+
+        try:
+            if choice == 1:
+                CapID = int(input("CapID: "))
+                CapVersion = int(input("CapVersion: "))
+                CapConfig = int(input("CapConfig: "))
+                act = int(input("操作（0注册，1注销，2广播打开，3广播关闭）: "))
+                tid = int(input("tid (事务ID): "))
+                server.AppMessage(CapID, CapVersion, CapConfig, act, tid)
+
+            elif choice == 2:
+                tid = int(input("tid: "))
+                oid = input("oid（源端ID）: ")
+                topic = int(input("topic: "))
+                coopMap_input = input("coopMap 数据（字符串）: ")
+                coopMap = coopMap_input.encode()  # 先转 bytes
+                coopMap = coopMap.hex()       # 再转十六进制字符串
+                coopMapType = int(input("coopMapType: "))
+                server.brocastPub(tid, oid, topic, coopMap, coopMapType)
+
+            elif choice == 3:
+                tid = int(input("tid: "))
+                oid = input("oid: ")
+                topic = int(input("topic: "))
+                context = input("context（二进制字符串 128 位）: ")
+                coopMap_input = input("coopMap: ")
+                coopMap = coopMap_input.encode()  # 先转 bytes
+                coopMap = coopMap.hex()
+                coopMapType = int(input("coopMapType: "))
+                bearCap = int(input("bearCap (1 代表需要承载能力): "))
+                server.brocastSub(tid, oid, topic, context, coopMap, coopMapType, bearCap)
+
+            elif choice == 4:
+                tid = int(input("tid: "))
+                oid = input("oid: ")
+                did = input("did: ")
+                topic = int(input("topic: "))
+                context = input("context（二进制字符串 128 位）: ")
+                coopMap_input = input("coopMap: ")
+                coopMap = coopMap_input.encode()  # 先转 bytes
+                coopMap = coopMap.hex()
+                coopMapType = int(input("coopMapType: "))
+                bearCap = int(input("bearCap: "))
+                server.brocastSubnty(tid, oid, did, topic, context, coopMap, coopMapType, bearCap)
+
+            elif choice == 5:
+                tid = int(input("tid: "))
+                oid = input("oid: ")
+                did = input("did（用逗号分隔多个）: ").split(',')
+                topic = int(input("topic: "))
+                act = int(input("act 操作: "))
+                context = input("context（二进制字符串 128 位）: ")
+                coopMap_input = input("coopMap: ")
+                coopMap = coopMap_input.encode()  # 先转 bytes
+                coopMap = coopMap.hex()
+                coopMapType = int(input("coopMapType: "))
+                bearInfo = int(input("bearInfo: "))
+                server.subMessage(tid, oid, did, topic, act, context, coopMap, coopMapType, bearInfo)
+
+            elif choice == 6:
+                tid = int(input("tid: "))
+                oid = input("oid: ")
+                did = input("did: ")
+                topic = int(input("topic: "))
+                act = int(input("act 操作: "))
+                context = input("context（二进制字符串 128 位）: ")
+                coopMap_input = input("coopMap: ")
+                coopMap = coopMap_input.encode()  # 先转 bytes
+                coopMap = coopMap.hex()
+                coopMapType = int(input("coopMapType: "))
+                bearCap = int(input("bearCap: "))
+                server.notifyMessage(tid, oid, did, topic, act, context, coopMap, coopMapType, bearCap)
+
+            elif choice == 7:
+                did = input("did: ")
+                context = input("context: ")
+                rl = int(input("RL (默认 1): ") or "1")
+                pt = int(input("Payload 类型: "))
+                server.streamSendreq(did, context, rl, pt)
+
+            elif choice == 8:
+                sid = input("sid: ")
+                data = input("流数据内容: ").encode()
+                server.streamSend(sid, data)
+
+            elif choice == 9:
+                did = input("did: ")
+                context = input("context: ")
+                sid = input("sid: ")
+                server.streamSendend(did, context, sid)
+
+            elif choice == 10:
+                did = input("did: ")
+                context = input("context: ")
+                rl = int(input("RL: "))
+                pt = int(input("Payload 类型: "))
+                file_path = input("文件路径: ")
+                server.sendFile(did, context, rl, pt, file_path)
+
+            else:
+                print("❌ 不支持的操作编号")
+
+        except Exception as e:
+            print(f"❗ 操作失败：{e}")
+
+        print("✅ 操作已发送，等待处理...\n")
+
+if __name__ == "__main__":
+    main()
