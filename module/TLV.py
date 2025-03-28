@@ -16,7 +16,8 @@ class TLVEncoderDecoder:
         "BearFlag": (0x000D, 4),
         "CommonDataType": (0x000E, 4),
         "CommonData": (0x000F, None),  # 可变长度
-        "Midact": (0x0010, 4)
+        "Mid": (0x0010, 4),
+        "Act": (0x0011, 4)
     }
 
     @staticmethod

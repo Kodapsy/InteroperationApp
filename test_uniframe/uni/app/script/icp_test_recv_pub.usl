@@ -2,7 +2,7 @@ include zmq.usl
 print(__msg)
 j={}
 j.Message_type = 2
-j.payload = __msg.body.payload
+j.Payload = __msg.body.payload
 j.Topic = __msg.body.topic
 j.OP = __msg.body.op
 j.SourceId = __msg.body.sourceId

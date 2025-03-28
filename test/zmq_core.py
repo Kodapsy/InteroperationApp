@@ -6,7 +6,8 @@ import sys
 import uuid
 import glob
 import time
-sys.path.append("/home/nvidia/mydisk/czl/InteroperationApp/module")
+#sys.path.append("/home/nvidia/mydisk/czl/InteroperationApp")
+sys.path.append("/home/czl/InteroperationApp")
 import module.CapabilityManager as CapabilityManager
 import module.CollaborationGraphManager as CollaborationGraphManager
 import config
@@ -166,7 +167,7 @@ def core_sub2app():
                             "CommonData":data["coopMap"],
                             "BearFlag":1 if data["bearCap"] == 1 else 0,
                             "ContextId":data["context"],
-                            "Midact":config.boardCastSub
+                            "Mid":config.boardCastSub
                         }
                         TLVm = module.TLV.TLVEncoderDecoder.encode(TLVmsg)
                         sendMsg["Payload"] = TLVm
@@ -195,7 +196,8 @@ def core_sub2app():
                             "CommonData":data["coopMap"],
                             "BearFlag":2 if data["bearinfo"] == 1 else 0,
                             "ContextId":data["context"],
-                            "Midact":config.subScribe
+                            "Mid":config.subScribe,
+                            "Act":data["act"]
                         }
                         TLVm = module.TLV.TLVEncoderDecoder.encode(TLVmsg)
                         sendMsg["Payload"] = TLVm
@@ -224,7 +226,8 @@ def core_sub2app():
                             "CommonData":data["coopMap"],
                             "BearFlag":1 if data["bearCap"] == 1 else 0,
                             "ContextId":data["context"],
-                            "Midact":config.notify
+                            "Mid":config.notify,
+                            "Act":data["act"]
                         }
                         TLVm = module.TLV.TLVEncoderDecoder.encode(TLVmsg)
                         sendMsg["Payload"] = TLVm
@@ -272,20 +275,20 @@ def core_sub2obu():
             count += 1
             data = json.loads(message)
             # 消息处理
-            if data["Message Type"] == config.echo_type:
+            if data["Message_type"] == config.echo_type:
                 CollaborationGraphManager.CollaborationGraphManager.getInstance().updateMapping(data["Source Vehicle ID"], data["CapsList"])
-            elif data["Message Type"] == config.sub_type or data["Message Type"] == config.pub_type:
+            elif data["Message_type"] == config.sub_type or data["Message_type"] == config.pub_type:
                 TLVm = data["Payload"]
                 TLVmsg = module.TLV.TLVEncoderDecoder.decode(TLVm)
-                if data["OP"] is None:
-                    SM_instance.update_state(TLVmsg["Midact"], TLVmsg["ContextId"])
+                if TLVmsg["OP"] is None:
+                    SM_instance.update_state(TLVmsg["Mid"], TLVmsg["ContextId"])
                 else:
-                    SM_instance.update_state(TLVmsg["Midact"], TLVmsg["ContextId"], data["OP"])
+                    SM_instance.update_state(TLVmsg["Mid"], TLVmsg["ContextId"], TLVmsg["OP"])
                 topic = data["Topic"]
                 topic_prefixed_message = f"{topic} {json.dumps(data, ensure_ascii=False)}"
                 pub2app_socket.send_string(topic_prefixed_message)
             else:
-                print(f"[!] 未知消息类型: {data['Message Type']}")
+                print(f"[!] 未知消息类型: {data['Message_type']}")
         except Exception as e:
             print(f"[!] core_sub2obu 发生错误: {e}")
 
