@@ -6,8 +6,8 @@ import sys
 import uuid
 import glob
 import time
-#sys.path.append("/home/nvidia/mydisk/czl/InteroperationApp")
-sys.path.append("/home/czl/InteroperationApp")
+sys.path.append("/home/nvidia/mydisk/czl/InteroperationApp")
+#sys.path.append("/home/czl/InteroperationApp")
 import module.CapabilityManager as CapabilityManager
 import module.CollaborationGraphManager as CollaborationGraphManager
 import config
@@ -124,7 +124,8 @@ def core_sub2app():
                         sendMsg["EncodeMode"] = config.encodeASN
                         TLVmsg = {
                             "CommonDataType":data["coopMapType"],
-                            "CommonData":data["coopMap"]
+                            "CommonData":data["coopMap"],
+                            "Mid": config.boardCastPub
                         }
                         TLVm = module.TLV.TLVEncoderDecoder.encode(TLVmsg)
                         sendMsg["Payload"] = TLVm
@@ -159,7 +160,8 @@ def core_sub2app():
                             "CommonDataType":data["coopMapType"],
                             "CommonData":data["coopMap"],
                             "BearFlag":1 if data["bearCap"] == 1 else 0,
-                            "ContextId":context_id
+                            "ContextId":context_id,
+                            "Mid": config.boardCastSub
                         }
                         TLVm = module.TLV.TLVEncoderDecoder.encode(TLVmsg)
                         sendMsg["Payload"] = TLVm
@@ -170,7 +172,7 @@ def core_sub2app():
                     case config.boardCastSubNotify:
                         data = message["msg"]
                         #会话管理。。。
-                        smFlag = SM_instance.update_state(data["mid"], data["context"])
+                        smFlag = SM_instance.update_state(message["mid"], data["context"])
                         if smFlag:
                             print(f"当前会话状态: {SM_instance.sessions}")
                         else:
@@ -199,7 +201,7 @@ def core_sub2app():
                     case config.subScribe:
                         data = message["msg"]
                         #会话管理
-                        smFlag = SM_instance.update_state(data["mid"], data["context"], data["act"])
+                        smFlag = SM_instance.update_state(message["mid"], data["context"], data["act"])
                         if smFlag:
                             print(f"当前会话状态: {SM_instance.sessions}")
                         else:
@@ -217,8 +219,7 @@ def core_sub2app():
                             "CommonData":data["coopMap"],
                             "BearFlag":2 if data["bearinfo"] == 1 else 0,
                             "ContextId":data["context"],
-                            "Mid":config.subScribe,
-                            "Act":data["act"]
+                            "Mid":config.subScribe
                         }
                         TLVm = module.TLV.TLVEncoderDecoder.encode(TLVmsg)
                         sendMsg["Payload"] = TLVm
@@ -229,7 +230,7 @@ def core_sub2app():
                     case config.notify:
                         data = message["msg"]
                         #会话管理
-                        smFlag = SM_instance.update_state(data["mid"], data["context"], data["act"])
+                        smFlag = SM_instance.update_state(message["mid"], data["context"], data["act"])
                         if smFlag:
                             print(f"当前会话状态: {SM_instance.sessions}")
                         else:
@@ -247,8 +248,7 @@ def core_sub2app():
                             "CommonData":data["coopMap"],
                             "BearFlag":1 if data["bearCap"] == 1 else 0,
                             "ContextId":data["context"],
-                            "Mid":config.notify,
-                            "Act":data["act"]
+                            "Mid":config.notify
                         }
                         TLVm = module.TLV.TLVEncoderDecoder.encode(TLVmsg)
                         sendMsg["Payload"] = TLVm
@@ -257,7 +257,42 @@ def core_sub2app():
                         pub2obu_socket.send_json(sendMsg)
                         
                     #todo：流数据处理 101-107
-                    
+                    case config.streamSendreq:
+                        data = message["msg"]
+                        #会话管理
+                        smFlag = SM_instance.update_state(message["mid"], data["context"])
+                        if smFlag:
+                            print(f"当前会话状态: {SM_instance.sessions}")
+                        else:
+                            print(f"会话状态更新失败")
+                        sendMsg = {}
+                        sendMsg["RL"] = data["rl"]
+                        sendMsg["DestId"] = data["did"]
+                        sendMsg["PT"] = data["pt"]
+                        sendMsg["context"] = data["context"]
+                        sendMsg["mid"] = message["mid"]
+                        pub2obu_socket.send_json(sendMsg)
+                    case config.streamSend:
+                        data = message["msg"]
+                        sendMsg = {}
+                        sendMsg["sid"] = data["sid"]
+                        sendMsg["data"] = data["data"]
+                        sendMsg["mid"] = message["mid"]
+                        pub2obu_socket.send_json(sendMsg)
+                    case config.streamSendend:
+                        data = message["msg"]
+                        #会话管理
+                        smFlag = SM_instance.update_state(message["mid"], data["context"])
+                        if smFlag:
+                            print(f"当前会话状态: {SM_instance.sessions}")
+                        else:
+                            print(f"会话状态更新失败")
+                        sendMsg = {}
+                        sendMsg["sid"] = data["sid"]
+                        sendMsg["did"] = data["did"]
+                        sendMsg["context"] = data["context"]
+                        sendMsg["mid"] = message["mid"]
+                        pub2obu_socket.send_json(sendMsg)
                     #todo：文件处理 111-113
                         
                         
@@ -285,6 +320,8 @@ def core_sub2obu():
 
     pub2app_socket = context.socket(zmq.PUB)
     pub2app_socket.connect(f"tcp://{config.selfip}:{config.recv_sub_port}")
+    pub2obu_socket = context.socket(zmq.PUB)
+    pub2obu_socket.bind(f"tcp://*:{config.obu_sub_port}")
 
     print("[core_sub2obu] 线程启动，等待消息...")
 
@@ -295,19 +332,46 @@ def core_sub2obu():
             print(f"[Core] 收到消息 {count}: {message}")
             count += 1
             data = json.loads(message)
+            message_type = data.get("Message_type")
             # 消息处理
-            if data["Message_type"] == config.echo_type:
+            if message_type == config.echo_type:
                 CollaborationGraphManager.CollaborationGraphManager.getInstance().updateMapping(data["Source Vehicle ID"], data["CapsList"])
-            elif data["Message_type"] == config.sub_type or data["Message_type"] == config.pub_type:
+            elif message_type == config.sub_type or message_type == config.pub_type:
                 TLVm = data["Payload"]
                 TLVmsg = module.TLV.TLVEncoderDecoder.decode(TLVm)
-                if TLVmsg["OP"] is None:
+                if TLVmsg.get("ContextId") is None :
+                    pass
+                elif TLVmsg["Mid"] != config.subScribe or TLVmsg["Mid"] != config.notify:
                     SM_instance.update_state(TLVmsg["Mid"], TLVmsg["ContextId"])
                 else:
-                    SM_instance.update_state(TLVmsg["Mid"], TLVmsg["ContextId"], TLVmsg["OP"])
+                    SM_instance.update_state(TLVmsg["Mid"], TLVmsg["ContextId"], data["OP"])
                 topic = data["Topic"]
                 topic_prefixed_message = f"{topic} {json.dumps(data, ensure_ascii=False)}"
                 pub2app_socket.send_string(topic_prefixed_message)
+            elif message_type == config.sendreq_type:
+                sendMsg = {}
+                sendMsg["DestId"] = data["did"]
+                sendMsg["context"] = data["context"]
+                sendMsg["sid"] = data["sid"]
+                sendMsg["mid"] = data["mid"]
+                pub2app_socket.send_string(json.dumps(sendMsg, ensure_ascii=False))
+                pubMsg = config.pubMsg.copy()
+                pubMsg["RT"] = 0
+                pubMsg["SourceId"] = config.source_id
+                pubMsg["DestId"] = data["did"]
+                pubMsg["OP"] = 0
+                pubMsg["PayloadType"] = config.type_common
+                pubMsg["EncodeMode"] = config.encodeASN
+                TLVmsg = {
+                    "SteamId":data["sid"],
+                    "ContextId":data["context"],
+                    "Mid": config.streamSendrdy
+                }
+                TLVm = module.TLV.TLVEncoderDecoder.encode(TLVmsg)
+                pubMsg["Payload"] = TLVm
+                byte_TLV = TLVm.encode("utf-8")
+                pubMsg["PayloadLength"] = len(byte_TLV)
+                pub2obu_socket.send_json(pubMsg)
             else:
                 print(f"[!] 未知消息类型: {data['Message_type']}")
         except Exception as e:

@@ -3,17 +3,17 @@
 # 参数2：目的设备名（车牌号）
 # 参数3：目的ip地址（DSMP模式不需要）
 # 参数4：目的端口（DSMP模式不需要)
-if __msg.pto != '' || __msg.body.argc < 3:
-	log("Usage: msg init " + __msg.body.argv[0] + " filename dest_dev_id [ ip port ]");
-	exit()
+#if __msg.pto != '' || __msg.body.argc < 3:
+#	log("Usage: msg init " + __msg.body.argv[0] + " filename dest_dev_id [ ip port ]");
+#	exit()
 
-fileName = __msg.body.argv[1]
-fileStat = File::stat(fileName)
-if !defined(fileStat) || !defined(fileStat.size) || fileStat.size <= 0:
-	log("file not exist or size 0")
-	exit()
+#fileName = __msg.body.argv[1]
+#fileStat = File::stat(fileName)
+#if !defined(fileStat) || !defined(fileStat.size) || fileStat.size <= 0:
+#	log("file not exist or size 0")
+#	exit()
 
-destId = __msg.body.argv[2]
+destId = "津A12345"
 if __msg.body.argc == 5:
 	ip = __msg.body.argv[3]
 	port = __msg.body.argv[4].toInt()
@@ -30,6 +30,7 @@ def applyStream(remoteDevice, ip, port):
 	if ip != '':
 		m.body.remoteIp = ip
 		m.body.remotePort = port
+	m.body.appContext = "skdhfsdkhfdskhfsdkf"
 	send(m, "psaitp")
 
 	# 等待申请stream的返回结果
@@ -51,11 +52,43 @@ def sendFile(streamId, fileName, payloadType):
 	m.body.fileName = fileName
 	m.body.payloadType = payloadType
 	send(m, "psaitp")
+	wait(10)
+	if !defined(__msg):
+		log("send fail")
+
+def sendData(streamId, data, payloadType):
+	m = _UniMsg('itp')
+	m.id = m.ids.ITP_SEND_DATA
+	m.body.streamId = streamId
+	m.body.data = data
+	m.body.payloadType = payloadType
+	send(m, "psaitp")
+	wait(10)
+	if !defined(__msg):
+		log("send fail")
+	
+def endStream(streamId):
+	m = _UniMsg('itp')
+	m.id = m.ids.ITP_END_STREAM
+	m.body.streamId = streamId
+	send(m, "psaitp")
 	
 # 首先申请一个stream
 streamId = applyStream(destId, ip, port)
 if streamId < 0:
 	exit()
 
-# 然后发送文件
-sendFile(streamId, fileName, 3)
+
+# 测试发送数据
+s = "".align(5000, 'A')
+sendData(streamId, s, 3)
+
+# 测试发送文件
+#sendFile(streamId, fileName, 3)
+
+# 测试发送数据
+s = "".align(5000, 'B')
+sendData(streamId, s, 3)
+
+# 结束stream
+endStream(streamId)

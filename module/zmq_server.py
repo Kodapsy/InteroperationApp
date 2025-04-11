@@ -264,7 +264,7 @@ class ICPServer:
         self.send(message)
     def streamSend(self,
                    sid:str,
-                   data:bytes
+                   data:str
                    ):
         """
         流发送
@@ -352,8 +352,6 @@ class ICPClient:
         """
         接收消息方法
         """
-        if not topic:
-            raise ValueError("topic 不能为空！请提供有效的数据。")
         self.socket.setsockopt_string(zmq.SUBSCRIBE, topic)
         message = self.socket.recv_string()
         try:

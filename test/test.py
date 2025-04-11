@@ -115,7 +115,7 @@ def main():
 
             elif choice == 8:
                 sid = input("sid: ")
-                data = input("流数据内容: ").encode()
+                data = input("流数据内容: ")
                 server.streamSend(sid, data)
 
             elif choice == 9:

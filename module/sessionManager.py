@@ -48,6 +48,13 @@ class SessionManager:
             (21, 1): (22, None),
             (22, 0): (22, 2),
             (22, 1): (22, 2),
+            (22, 1): (101, None),#steamSendreq
+            (101, None): (102, None),#streamSendrdy
+            (102, None): (106, None),#streamSendend
+            (106, None): (101, None),
+            (106, None): (21, 0),
+            (106, None): (22, 2),
+            
             (21, 0): None,
             (22, 2): None,
             (12, None): (13, None),

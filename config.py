@@ -1,5 +1,5 @@
-#selfip="192.168.20.224"
-selfip="192.168.20.223"
+selfip="192.168.20.224"
+#selfip="192.168.20.223"
 send_pub_port=66666
 send_sub_port=55555
 recv_pub_port=77777
@@ -11,13 +11,14 @@ obu_pub_port=27170
 pub_type = 3
 sub_type = 2
 echo_type = 1
+sendreq_type = 4
 
 #数据存放目录
-#data_dir = "/home/nvidia/mydisk/czl/InteroperationApp/itp_data"
-data_dir = "/home/czl/InteroperationApp/itp_data"
+data_dir = "/home/nvidia/mydisk/czl/InteroperationApp/itp_data"
+#data_dir = "/home/czl/InteroperationApp/itp_data"
 
-#source_id = "A12345"
-source_id = "2A12345"
+source_id = "A12345"
+#source_id = "2A12345"
 peer_id = ""
 board_id = ""
 
@@ -35,6 +36,7 @@ streamSendrdy = 102
 streamRecvrdy = 103
 streamSend = 104
 streamRecv = 105
+streamSendend = 106
 streamRecvend = 107
 sendFile = 111
 sendFin = 112

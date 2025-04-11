@@ -1,0 +1,168 @@
+# 引入必要模块
+include zmq.usl
+# 解析消息内容为 JSON
+j = __msg.body.content.jsonParse()
+#print(j)
+
+# 判断 JSON 是否有效
+if (!defined(j)):
+    log("Invalid JSON format: " + __msg.body.content)
+    exit()
+
+def applyStream(remoteDevice, ip, port, context ,sid):
+	m = _UniMsg('itp')
+	m.id = m.ids.ITP_APPLY_STREAM
+	m.body.remoteDevice = remoteDevice
+	if ip != '':
+		m.body.remoteIp = ip
+		m.body.remotePort = port
+	m.body.appContext = {}
+    m.body.appContext.context = context
+    m.body.appContext.sid = sid
+	send(m, "psaitp")
+
+	# 等待申请stream的返回结果
+	wait(3, "itp", "ITP_APPLY_STREAM_RSP") # 等待psaitp的返回
+	if !defined(__msg): # 等待时间内没有返回消息
+		log("apply stream fail: timeout")
+		return -1
+	if __msg.body.resultCode != 0: # psaitp返回失败
+		log("apply stream fail: " + __msg.body.reason)
+		return -1
+	# 申请成功
+	return __msg.body.streamId
+
+# 这个函数用于发送文件
+def sendFile(streamId, fileName, payloadType):
+	m = _UniMsg('itp')
+	m.id = m.ids.ITP_SEND_FILE
+	m.body.streamId = streamId
+	m.body.fileName = fileName
+	m.body.payloadType = payloadType
+	send(m, "psaitp")
+	wait(10)
+	if !defined(__msg):
+		log("send fail")
+
+def sendData(streamId, data, payloadType):
+	m = _UniMsg('itp')
+	m.id = m.ids.ITP_SEND_DATA
+	m.body.streamId = streamId
+	m.body.data = data
+	m.body.payloadType = payloadType
+	send(m, "psaitp")
+	wait(10)
+	if !defined(__msg):
+		log("send fail")
+	
+def endStream(streamId):
+	m = _UniMsg('itp')
+	m.id = m.ids.ITP_END_STREAM
+	m.body.streamId = streamId
+	send(m, "psaitp")
+	
+# 获取消息类型
+message_type = j.get("Message Type", -1)
+mid = j.get("mid",-1)
+ip = ''
+port = 0
+
+if mid == 101:
+    destId = j.get("DestId",-1)
+    context = j.get("context",-1)
+    sid = (time().toString("%s") + __sys_myaddr).md5()
+    val = {}
+    val.destId = destId
+    val.context = context
+    GlobDict::set(sid , val)
+    streamId = applyStream(destId, ip, port, context, sid)
+    if streamId < 0: 
+        print("No usable streamId")
+        exit()
+    s = {}
+    s.sid = sid
+    s.did = destId
+    s.context = context
+    s.Message_type = 4
+    s.mid = 102
+    sj = toJson(s)
+    zmq_publish(sj)
+    endStream(streamId)
+elif mid == 104:
+    sid = j.get("sid",-1)
+    data = j.get("data",-1)
+    val = GlobDict::get(key)
+    destId = val.destId
+    context = val.context
+    streamId = streamId = applyStream(destId, ip, port, context, sid)
+    if streamId < 0: 
+        print("No usable streamId")
+        exit()
+    sendData(streamId,data,3)
+    endStream
+elif mid == 106:
+    sid = j.get("sid",-1)
+    GlobDict::del(sid)
+else:
+    # 打开文件并解析内容为 JSON
+    file = File()
+    #file.open("/home/czl/InteroperationApp/data/output.json")
+    file.open("/home/nvidia/mydisk/czl/InteroperationApp/data/output.json")
+    file_content = file.read(65536)
+    self_data = file_content.jsonParse()
+
+    # 构造消息
+    m = _UniMsg("icp")
+
+    # 根据 Message Type 处理
+    if message_type == 1:
+        m.id = m.ids.ICP_ECHO
+        caps_data = j.get("CapsList",-1)
+        if !defined(caps_data) || j.get("Caps",-1) <= 0:
+            log("No caps yet")
+        else:
+            j = 0
+            for i in sql:
+                #print(i)
+                m.body.cap[j].id = i.CAPID
+                m.body.cap[j].version = i.CAPVER
+                m.body.cap[j].config = i.CAPCONFIG
+                j = j + 1
+        m.body.pos.lo = self_data.lon
+        m.body.pos.la = self_data.lat
+        m.body.pos.al = self_data.ele
+        m.body.speed = self_data.spd
+        m.body.heading = self_data.hea
+        m.body.accel.lo = self_data.longAcc
+        m.body.accel.la = self_data.latAcc
+        m.body.accel.vert = self_data.vertAcc
+        m.body.accel.yaw = self_data.yawRate
+        m.body.sourceId = j.get("Source Vehicle ID",-1)
+        m.body.destId = j.get("Peer Vehicle ID",-1)
+    elif message_type == 2:
+        m.id = m.ids.ICP_SUB
+        m.body.op = j.get("OP",-1)
+        m.body.topic = j.get("Topic",-1)
+        m.body.sourceId = j.get("SourceId",-1)
+        m.body.destId = j.get("DestID",-1)
+        m.body.payload = j.get("Payload",-1)
+        m.body.payloadType = j.get("PayloadType",-1)
+        m.body.payloadLength = j.get("PayloadLength",-1)
+        m.body.encodeMode = j.get("EncodeMode",-1)
+    elif message_type == 3:
+        m.id = m.ids.ICP_PUB
+        m.body.needAck = True
+        m.body.op = j.get("OP",-1)
+        m.body.topic = j.get("Topic",-1)
+        m.body.sourceId = j.get("SourceId","")
+        m.body.destId = j.get("DestID","")
+        m.body.payload = j.get("Payload",-1)
+        m.body.payloadType = j.get("PayloadType",-1)
+        m.body.payloadLength = j.get("PayloadLength",-1)
+        m.body.encodeMode = j.get("EncodeMode",-1)
+    else:
+        log("Unknown Message Type")
+        exit()
+    print(m)
+    # 发送消息
+    send(m, "psaicp.so")

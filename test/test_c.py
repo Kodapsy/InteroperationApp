@@ -8,7 +8,7 @@ if __name__ == "__main__":
     print("Client started.")
     while True:
         try:
-            meg = client.recv_message(topic="test")
+            meg = client.recv_message(topic="")
             print(f"Received message: {meg}")
         except ValueError:
             print("Error receiving message.")

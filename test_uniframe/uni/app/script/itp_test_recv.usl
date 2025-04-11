@@ -1,5 +1,65 @@
+# 这是一个stream接收消息的测试
+#
 assert(__msg.pto == 'itp')
-fileName = __msg.body.fileName
-payloadType = __msg.body.payloadType
-streamId = __msg.body.streamId
-remoteDevice = __msg.body.remoteDevice
+
+def endStream(streamId, deviceId):
+	m = _UniMsg('itp')
+	m.id = m.ids.ITP_END_STREAM
+	m.body.streamId = streamId
+	m.body.remoteDevice = deviceId
+	send(m, "psaitp")
+	exit()
+
+# 判断如果是新的STREAM，则需要等待数据接收
+if __msg.id == __msg.ids.ITP_RECEIVE_STREAM_READY:
+	# 取得来源
+	streamId = __msg.body.streamId
+	remoteDevice = __msg.body.remoteDevice
+
+	# 取出appContext，解析，其中会有sid和等待消息的次数
+	appContext = __msg.body.appContext
+	if !defined(appContext) || !defined(appContext.sid):
+		log("invalid json format: " + __msg.body.appContext)
+		exit()
+
+	# 将sid的信息保存在一个全局表中，备查
+	key = remoteDevice + "-" + streamId
+	GlobDict::set(key, appContext.sid)
+
+	# 等待足够的时间，这段时间内应该收到数据
+	sleep(5000)
+
+	if defined(GlobDict::get(key)):
+		# 一般情况下，等待期间如果收到数据会清理这个key
+		# 走到这里，说明5秒钟没有收到数据，肯定有问题，清理steam
+		log("not received a message after 5000ms")
+		GlobDict::del(key)
+		endStream(streamId, remoteDevice)
+	exit()
+	
+# 如果收到数据，则可以从全局表中取到sid并上报给应用
+if __msg.id == __msg.ids.ITP_RECEIVED_DATA:
+	data = __msg.body.data
+	payloadType = __msg.body.payloadType
+	streamId = __msg.body.streamId
+	remoteDevice = __msg.body.remoteDevice
+
+	key = remoteDevice + "-" + streamId
+	if !defined(GlobDict::get(key)):
+		# 走到这里，说明消息可能来的太晚，错误处理
+		log("received data, can not find " + key)
+		# 消息丢弃
+		exit()
+
+	# 取到在全局表中保存的sid
+	sid = GlobDict::get(key)
+
+	# 这里可以有代码将消息传给上层应用
+	# 。。。
+	# 
+
+	GlobDict::del(key)
+	endStream(streamId, remoteDevice)
+	exit()
+
+log("received invalid message " + __msg.id)
