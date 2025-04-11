@@ -13,6 +13,7 @@ import module.CollaborationGraphManager as CollaborationGraphManager
 import config
 import module.TLV
 from module.sessionManager import SessionManager
+import queue
 # 创建数据目录
 os.makedirs(config.data_dir, exist_ok=True)
 
@@ -24,7 +25,19 @@ maps_instance = CollaborationGraphManager.CollaborationGraphManager()
 SM_instance = SessionManager.getInstance()
 # ZMQ 上下文
 context = zmq.Context()
+pub2obu_queue = queue.Queue()
+def pub2obu_loop():
+    """唯一绑定 obu_sub_port 的线程，负责转发消息到 OBU"""
+    pub_socket = context.socket(zmq.PUB)
+    pub_socket.bind(f"tcp://*:{config.obu_sub_port}")
+    print("[pub2obu_loop] 启动，等待消息发送到 OBU...")
 
+    while True:
+        try:
+            msg = pub2obu_queue.get()  # 从队列中取出消息（阻塞）
+            pub_socket.send_json(msg)
+        except Exception as e:
+            print(f"[!] pub2obu_loop 发送失败: {e}")
 def clean_old_files():
     """如果 JSON 文件超过 MAX_FILES，删除最早的文件"""
     json_files = sorted(glob.glob(os.path.join(config.data_dir, "*.json")), key=os.path.getctime)  # 按创建时间排序
@@ -61,9 +74,7 @@ def core_sub2app():
     sub_socket = context.socket(zmq.SUB)
     sub_socket.connect(f"tcp://{config.selfip}:{config.send_pub_port}")
     sub_socket.setsockopt_string(zmq.SUBSCRIBE, "")
-
-    pub2obu_socket = context.socket(zmq.PUB)
-    pub2obu_socket.bind(f"tcp://*:{config.obu_sub_port}")
+    
     pub2app_socket = context.socket(zmq.PUB)
     pub2app_socket.connect(f"tcp://{config.selfip}:{config.recv_sub_port}")
 
@@ -131,7 +142,7 @@ def core_sub2app():
                         sendMsg["Payload"] = TLVm
                         byte_TLV = TLVm.encode("utf-8")
                         sendMsg["PayloadLength"] = len(byte_TLV)
-                        pub2obu_socket.send_json(sendMsg)
+                        pub2obu_queue.put(sendMsg)
                         
                     case config.boardCastSub:
                         data = message["msg"]
@@ -167,7 +178,7 @@ def core_sub2app():
                         sendMsg["Payload"] = TLVm
                         byte_TLV = TLVm.encode("utf-8")
                         sendMsg["PayloadLength"] = len(byte_TLV)
-                        pub2obu_socket.send_json(sendMsg)
+                        pub2obu_queue.put(sendMsg)
                     
                     case config.boardCastSubNotify:
                         data = message["msg"]
@@ -196,7 +207,7 @@ def core_sub2app():
                         sendMsg["Payload"] = TLVm
                         byte_TLV = TLVm.encode("utf-8")
                         sendMsg["PayloadLength"] = len(byte_TLV)
-                        pub2obu_socket.send_json(sendMsg)
+                        pub2obu_queue.put(sendMsg)
                     
                     case config.subScribe:
                         data = message["msg"]
@@ -225,7 +236,7 @@ def core_sub2app():
                         sendMsg["Payload"] = TLVm
                         byte_TLV = TLVm.encode("utf-8")
                         sendMsg["PayloadLength"] = len(byte_TLV)
-                        pub2obu_socket.send_json(sendMsg)
+                        pub2obu_queue.put(sendMsg)
                         
                     case config.notify:
                         data = message["msg"]
@@ -254,7 +265,7 @@ def core_sub2app():
                         sendMsg["Payload"] = TLVm
                         byte_TLV = TLVm.encode("utf-8")
                         sendMsg["PayloadLength"] = len(byte_TLV)
-                        pub2obu_socket.send_json(sendMsg)
+                        pub2obu_queue.put(sendMsg)
                         
                     #todo：流数据处理 101-107
                     case config.streamSendreq:
@@ -271,14 +282,14 @@ def core_sub2app():
                         sendMsg["PT"] = data["pt"]
                         sendMsg["context"] = data["context"]
                         sendMsg["mid"] = message["mid"]
-                        pub2obu_socket.send_json(sendMsg)
+                        pub2obu_queue.put(sendMsg)
                     case config.streamSend:
                         data = message["msg"]
                         sendMsg = {}
                         sendMsg["sid"] = data["sid"]
                         sendMsg["data"] = data["data"]
                         sendMsg["mid"] = message["mid"]
-                        pub2obu_socket.send_json(sendMsg)
+                        pub2obu_queue.put(sendMsg)
                     case config.streamSendend:
                         data = message["msg"]
                         #会话管理
@@ -292,7 +303,7 @@ def core_sub2app():
                         sendMsg["did"] = data["did"]
                         sendMsg["context"] = data["context"]
                         sendMsg["mid"] = message["mid"]
-                        pub2obu_socket.send_json(sendMsg)
+                        pub2obu_queue.put(sendMsg)
                     #todo：文件处理 111-113
                         
                         
@@ -306,7 +317,7 @@ def core_sub2app():
                     "Source Vehicle ID": config.source_id,
                     "Peer Vehicle ID": config.board_id
                 }
-                pub2obu_socket.send_string(json.dumps(echo_message))
+                pub2obu_queue.put(sendMsg)
                 print(f"[Core] 发送 echo 消息: {echo_message}")
                 last_timer_send = time.time()"""
         except Exception as e:
@@ -320,8 +331,6 @@ def core_sub2obu():
 
     pub2app_socket = context.socket(zmq.PUB)
     pub2app_socket.connect(f"tcp://{config.selfip}:{config.recv_sub_port}")
-    pub2obu_socket = context.socket(zmq.PUB)
-    pub2obu_socket.bind(f"tcp://*:{config.obu_sub_port}")
 
     print("[core_sub2obu] 线程启动，等待消息...")
 
@@ -371,7 +380,7 @@ def core_sub2obu():
                 pubMsg["Payload"] = TLVm
                 byte_TLV = TLVm.encode("utf-8")
                 pubMsg["PayloadLength"] = len(byte_TLV)
-                pub2obu_socket.send_json(pubMsg)
+                pub2obu_queue.put(sendMsg)
             else:
                 print(f"[!] 未知消息类型: {data['Message_type']}")
         except Exception as e:
@@ -390,6 +399,10 @@ def main():
     t_core = threading.Thread(target=core, daemon=True)
     threads.append(t_core)
 
+    # 启动 pub2obu_router
+    t_pub2obu = threading.Thread(target=pub2obu_loop, daemon=True)
+    threads.append(t_pub2obu)
+    
     # 启动 PUB-SUB 处理线程
     t_sub2app = threading.Thread(target=core_sub2app, daemon=True)
     threads.append(t_sub2app)
