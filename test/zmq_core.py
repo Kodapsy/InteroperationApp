@@ -381,6 +381,12 @@ def core_sub2obu():
                 byte_TLV = TLVm.encode("utf-8")
                 pubMsg["PayloadLength"] = len(byte_TLV)
                 pub2obu_queue.put(sendMsg)
+            elif message_type == config.streamRecv:
+                sendMsg = {}
+                sendMsg["sid"] = data["sid"]
+                sendMsg["data"] = data["data"]
+                sendMsg["mid"] = data["mid"]
+                pub2obu_queue.put(sendMsg)
             else:
                 print(f"[!] 未知消息类型: {data['Message_type']}")
         except Exception as e:

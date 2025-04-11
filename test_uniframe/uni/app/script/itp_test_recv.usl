@@ -17,7 +17,7 @@ if __msg.id == __msg.ids.ITP_RECEIVE_STREAM_READY:
 	remoteDevice = __msg.body.remoteDevice
 
 	# 取出appContext，解析，其中会有sid和等待消息的次数
-	appContext = __msg.body.appContext
+	appContext = __msg.body.appContext.jsonParse()
 	if !defined(appContext) || !defined(appContext.sid):
 		log("invalid json format: " + __msg.body.appContext)
 		exit()
@@ -55,8 +55,12 @@ if __msg.id == __msg.ids.ITP_RECEIVED_DATA:
 	sid = GlobDict::get(key)
 
 	# 这里可以有代码将消息传给上层应用
-	# 。。。
-	# 
+	mm = {}
+	mm.data = data
+	mm.sid = sid
+	mm.mid = 105
+	mj = toJson(mm)
+	zmq_publish(mj)
 
 	GlobDict::del(key)
 	endStream(streamId, remoteDevice)

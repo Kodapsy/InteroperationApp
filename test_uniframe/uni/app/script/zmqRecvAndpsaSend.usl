@@ -16,9 +16,11 @@ def applyStream(remoteDevice, ip, port, context ,sid):
 	if ip != '':
 		m.body.remoteIp = ip
 		m.body.remotePort = port
-	m.body.appContext = {}
-    m.body.appContext.context = context
-    m.body.appContext.sid = sid
+    mm = {}
+    mm.context = context
+    mm.sid = sid
+    mj = toJson(mm)
+	m.body.appContext = mj
 	send(m, "psaitp")
 
 	# 等待申请stream的返回结果
