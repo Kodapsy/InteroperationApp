@@ -35,6 +35,7 @@ def pub2obu_loop():
     while True:
         try:
             msg = pub2obu_queue.get()  # 从队列中取出消息（阻塞）
+            print(f"[pub2obu_loop] 发送消息: {msg}")
             pub_socket.send_json(msg)
         except Exception as e:
             print(f"[!] pub2obu_loop 发送失败: {e}")
@@ -49,25 +50,20 @@ def clean_old_files():
         except Exception as e:
             print(f"[!] Error deleting file {oldest_file}: {e}")
 
-def core():
-    """ZeroMQ 代理线程 (XSUB -> XPUB)"""
+def proxy_send():
     corexsub = context.socket(zmq.XSUB)
     corexsub.bind(f"tcp://*:{config.send_sub_port}") 
-
     relayxpub = context.socket(zmq.XPUB)
     relayxpub.bind(f"tcp://*:{config.send_pub_port}") 
+    zmq.proxy(corexsub, relayxpub)
 
+def proxy_recv():
     corexpub = context.socket(zmq.XPUB)
     corexpub.bind(f"tcp://*:{config.recv_pub_port}")
-
     relayxsub = context.socket(zmq.XSUB)
     relayxsub.bind(f"tcp://*:{config.recv_sub_port}")
-
-    print("[Core] ZeroMQ 代理启动...")
-
-    # 使用 zmq.proxy 进行消息转发
-    zmq.proxy(corexsub, relayxpub)
     zmq.proxy(corexpub, relayxsub)
+
 
 def core_sub2app():
     """监听 `send_pub_port` """
@@ -162,11 +158,11 @@ def core_sub2app():
                         sendMsg["EncodeMode"] = config.encodeASN
                         context_id = data["context"]
                         # 清理空白字符、只保留0和1
-                        context_id = ''.join(c for c in context_id if c in '01')
-                        # 强制修剪为128位
-                        if len(context_id) > 128:
-                            print(f"[!] ContextId 超长，已截断: 原始 {len(context_id)} → 128")
-                            context_id = context_id[:128]
+                        # 强制修剪为64位
+                        print(len(context_id))
+                        if len(context_id) > 64:
+                            print(f"[!] ContextId 超长，已截断: 原始 {len(context_id)} → 64")
+                            context_id = context_id[:64]
                         TLVmsg = {
                             "CommonDataType":data["coopMapType"],
                             "CommonData":data["coopMap"],
@@ -355,7 +351,7 @@ def core_sub2obu():
                 else:
                     SM_instance.update_state(TLVmsg["Mid"], TLVmsg["ContextId"], data["OP"])
                 topic = data["Topic"]
-                topic_prefixed_message = f"{topic} {json.dumps(data, ensure_ascii=False)}"
+                topic_prefixed_message = f"{topic} {json.dumps(TLVmsg, ensure_ascii=False)}"
                 pub2app_socket.send_string(topic_prefixed_message)
             elif message_type == config.sendreq_type:
                 sendMsg = {}
@@ -372,7 +368,7 @@ def core_sub2obu():
                 pubMsg["PayloadType"] = config.type_common
                 pubMsg["EncodeMode"] = config.encodeASN
                 TLVmsg = {
-                    "SteamId":data["sid"],
+                    "StreamId":data["sid"],
                     "ContextId":data["context"],
                     "Mid": config.streamSendrdy
                 }
@@ -380,13 +376,15 @@ def core_sub2obu():
                 pubMsg["Payload"] = TLVm
                 byte_TLV = TLVm.encode("utf-8")
                 pubMsg["PayloadLength"] = len(byte_TLV)
-                pub2obu_queue.put(sendMsg)
+                pub2obu_queue.put(pubMsg)
             elif message_type == config.streamRecv:
                 sendMsg = {}
                 sendMsg["sid"] = data["sid"]
                 sendMsg["data"] = data["data"]
                 sendMsg["mid"] = data["mid"]
-                pub2obu_queue.put(sendMsg)
+                topic = ""
+                topic_prefixed_message = f"{topic} {json.dumps(sendMsg, ensure_ascii=False)}"
+                pub2app_socket.send_string(topic_prefixed_message)
             else:
                 print(f"[!] 未知消息类型: {data['Message_type']}")
         except Exception as e:
@@ -402,9 +400,12 @@ def main():
     threads = []
 
     # 启动 ZeroMQ 代理
-    t_core = threading.Thread(target=core, daemon=True)
-    threads.append(t_core)
-
+    t_proxy_send = threading.Thread(target=proxy_send, daemon=True)
+    threads.append(t_proxy_send)
+    
+    t_proxy_recv = threading.Thread(target=proxy_recv, daemon=True)
+    threads.append(t_proxy_recv)
+    
     # 启动 pub2obu_router
     t_pub2obu = threading.Thread(target=pub2obu_loop, daemon=True)
     threads.append(t_pub2obu)

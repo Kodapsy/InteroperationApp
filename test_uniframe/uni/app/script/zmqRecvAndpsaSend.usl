@@ -9,30 +9,30 @@ if (!defined(j)):
     log("Invalid JSON format: " + __msg.body.content)
     exit()
 
-def applyStream(remoteDevice, ip, port, context ,sid):
-	m = _UniMsg('itp')
-	m.id = m.ids.ITP_APPLY_STREAM
-	m.body.remoteDevice = remoteDevice
-	if ip != '':
-		m.body.remoteIp = ip
-		m.body.remotePort = port
+def applyStream(remoteDevice, ip, port, context, sid):
+    m = _UniMsg('itp')
+    m.id = m.ids.ITP_APPLY_STREAM
+    m.body.remoteDevice = remoteDevice
+    # if ip != '':
+    #     m.body.remoteIp = ip
+    #     m.body.remotePort = port
     mm = {}
     mm.context = context
     mm.sid = sid
     mj = toJson(mm)
-	m.body.appContext = mj
-	send(m, "psaitp")
+    m.body.appContext = mj
+    send(m, "psaitp")
 
-	# 等待申请stream的返回结果
-	wait(3, "itp", "ITP_APPLY_STREAM_RSP") # 等待psaitp的返回
-	if !defined(__msg): # 等待时间内没有返回消息
-		log("apply stream fail: timeout")
-		return -1
-	if __msg.body.resultCode != 0: # psaitp返回失败
-		log("apply stream fail: " + __msg.body.reason)
-		return -1
-	# 申请成功
-	return __msg.body.streamId
+    # 等待申请stream的返回结果
+    wait(3, "itp", "ITP_APPLY_STREAM_RSP")  # 等待psaitp的返回
+    if !defined(__msg):  # 等待时间内没有返回消息
+        log("apply stream fail: timeout")
+        return -1
+    if __msg.body.resultCode != 0:  # psaitp返回失败
+        log("apply stream fail: " + __msg.body.reason)
+        return -1
+    # 申请成功
+    return __msg.body.streamId
 
 # 这个函数用于发送文件
 def sendFile(streamId, fileName, payloadType):
@@ -76,7 +76,8 @@ if mid == 101:
     val = {}
     val.destId = destId
     val.context = context
-    GlobDict::set(sid , val)
+    valj = toJson(val)
+    GlobDict::set(sid , valj)
     streamId = applyStream(destId, ip, port, context, sid)
     if streamId < 0: 
         print("No usable streamId")
@@ -93,15 +94,16 @@ if mid == 101:
 elif mid == 104:
     sid = j.get("sid",-1)
     data = j.get("data",-1)
-    val = GlobDict::get(key)
+    valj = GlobDict::get(sid)
+    val = valj.jsonParse()
     destId = val.destId
     context = val.context
-    streamId = streamId = applyStream(destId, ip, port, context, sid)
+    streamId = applyStream(destId, ip, port, context, sid)
     if streamId < 0: 
         print("No usable streamId")
         exit()
     sendData(streamId,data,3)
-    endStream
+    endStream(streamId)
 elif mid == 106:
     sid = j.get("sid",-1)
     GlobDict::del(sid)
@@ -146,7 +148,7 @@ else:
         m.body.op = j.get("OP",-1)
         m.body.topic = j.get("Topic",-1)
         m.body.sourceId = j.get("SourceId",-1)
-        m.body.destId = j.get("DestID",-1)
+        m.body.destId = j.get("DestId","")
         m.body.payload = j.get("Payload",-1)
         m.body.payloadType = j.get("PayloadType",-1)
         m.body.payloadLength = j.get("PayloadLength",-1)
@@ -157,7 +159,7 @@ else:
         m.body.op = j.get("OP",-1)
         m.body.topic = j.get("Topic",-1)
         m.body.sourceId = j.get("SourceId","")
-        m.body.destId = j.get("DestID","")
+        m.body.destId = j.get("DestId","")
         m.body.payload = j.get("Payload",-1)
         m.body.payloadType = j.get("PayloadType",-1)
         m.body.payloadLength = j.get("PayloadLength",-1)

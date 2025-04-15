@@ -337,7 +337,7 @@ class ICPServer:
         self.send(message)
         
 class ICPClient:
-    def __init__(self):
+    def __init__(self,topic = ""):
         """
         初始化 ICPClient 类，连接到指定端口。
         """
@@ -346,17 +346,19 @@ class ICPClient:
         self.context = zmq.Context()
         self.socket = self.context.socket(zmq.SUB)
         self.socket.connect(f"tcp://{self.ip}:{self.port}")
+        self.socket.setsockopt_string(zmq.SUBSCRIBE, topic)
         #print(f"Client connected to port {self.port}")
         
-    def recv_message(self,topic:str):
+    def recv_message(self):
         """
-        接收消息方法
+        接收消息方法：支持带 topic 和不带 topic 的情况
         """
-        self.socket.setsockopt_string(zmq.SUBSCRIBE, topic)
         message = self.socket.recv_string()
         try:
-            parsed_message = json.loads(message)
+            # 判断是否可能包含 topic（按第一个空格拆分）
+            topic, json_part = message.split(" ", 1)
+            parsed_message = json.loads(json_part)
             return parsed_message
         except json.JSONDecodeError:
-            print(f"Failed to decode message: {message}")
+            print(f"[!] Failed to decode message: {message}")
             return None

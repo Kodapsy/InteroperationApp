@@ -17,8 +17,8 @@ sendreq_type = 4
 data_dir = "/home/nvidia/mydisk/czl/InteroperationApp/itp_data"
 #data_dir = "/home/czl/InteroperationApp/itp_data"
 
-source_id = "A12345"
-#source_id = "2A12345"
+source_id = "京A12345"
+#source_id = "津A12345"
 peer_id = ""
 board_id = ""
 
@@ -64,7 +64,7 @@ pubMsg = {
     "SourceID":"",
     "DestID":None,
     "OP":0,
-    "Topic":0,
+    "Topic":"",
     "Payload":None,
     "PayloadType":0,
     "PayloadLength":0,
@@ -79,7 +79,7 @@ subMsg = {
     "SourceID":"",
     "DestID":None,
     "OP":0,
-    "Topic":0,
+    "Topic":"",
     "Payload":None,
     "PayloadType":0,
     "PayloadLength":0,
