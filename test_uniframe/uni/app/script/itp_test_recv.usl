@@ -57,7 +57,7 @@ if __msg.id == __msg.ids.ITP_RECEIVED_DATA:
 
 	# 这里可以有代码将消息传给上层应用
 	mm = {}
-	mm.Message_type = 5
+	mm.Message_type = 105
 	mm.data = data
 	mm.sid = sid
 	mm.mid = 105

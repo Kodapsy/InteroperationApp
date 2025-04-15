@@ -1,7 +1,8 @@
 import time
 import json
 import sys
-sys.path.append("/home/nvidia/mydisk/czl/InteroperationApp")
+#sys.path.append("/home/nvidia/mydisk/czl/InteroperationApp")
+sys.path.append("/home/czl/InteroperationApp")
 from module.zmq_server import ICPServer, ICPClient
 
 def main():
