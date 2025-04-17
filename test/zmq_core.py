@@ -6,8 +6,8 @@ import sys
 import uuid
 import glob
 import time
-sys.path.append("/home/nvidia/mydisk/czl/InteroperationApp")
-#sys.path.append("/home/czl/InteroperationApp")
+#sys.path.append("/home/nvidia/mydisk/czl/InteroperationApp")
+sys.path.append("/home/gyb/InteroperationApp")
 import module.CapabilityManager as CapabilityManager
 import module.CollaborationGraphManager as CollaborationGraphManager
 import config

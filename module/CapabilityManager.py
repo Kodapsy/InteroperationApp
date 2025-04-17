@@ -1,4 +1,8 @@
 import threading
+from .logger import logger_decorator, global_logger
+
+# 启用模块日志
+global_logger.enable_module("CapabilityManager")
 
 class CapabilityManager:
     _instance = None
@@ -19,6 +23,7 @@ class CapabilityManager:
                     CapabilityManager._instance = CapabilityManager()
         return CapabilityManager._instance
 
+    @logger_decorator("CapabilityManager", level="INFO")
     def putCapability(self, appid: int, capId: int, capVersion: int, capConfig: int) -> bool:
         """添加能力，默认broadcast为True"""
         instance = CapabilityManager.getInstance()

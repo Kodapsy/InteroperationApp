@@ -2,12 +2,12 @@ import time
 import json
 import sys
 #sys.path.append("/home/nvidia/mydisk/czl/InteroperationApp")
-sys.path.append("/home/czl/InteroperationApp")
+sys.path.append("/home/gyb/InteroperationApp")
 from module.zmq_server import ICPServer, ICPClient
 
 def main():
     print("🚀 ICPServer 测试程序启动")
-    app_id = input("请输入 app_id（默认 test_app）: ").strip() or "test_app"
+    app_id = int(input("请输入 app_id（默认 test_app）: ")) or 0
     server = ICPServer(app_id=app_id)
     client = ICPClient()
 
