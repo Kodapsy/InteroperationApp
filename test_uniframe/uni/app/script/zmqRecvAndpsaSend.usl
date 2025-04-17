@@ -107,43 +107,27 @@ elif mid == 104:
 elif mid == 106:
     sid = j.get("sid",-1)
     GlobDict::del(sid)
+elif mid == 111:
+    sid = (time().toString("%s") + __sys_myaddr).md5()
+    s = {}
+    destId = j.get("DestId",-1)
+    context = j.get("context",-1)
+    file = j.get("file",-1)
+    s.did = destId
+    s.context = context
+    s.Message_type = 112
+    s.file = file
+    s.mid = 112
+    streamId = applyStream(destId, ip, port, context, sid)
+    if streamId < 0: 
+        print("No usable streamId")
+        exit()
+    sendFile(streamId,file,3)
+    endStream(streamId)
+    sj = toJson(s)
+    zmq_publish(sj)
 else:
-    # 打开文件并解析内容为 JSON
-    file = File()
-    #file.open("/home/czl/InteroperationApp/data/output.json")
-    file.open("/home/nvidia/mydisk/czl/InteroperationApp/data/output.json")
-    file_content = file.read(65536)
-    self_data = file_content.jsonParse()
-
-    # 构造消息
-    m = _UniMsg("icp")
-
-    # 根据 Message Type 处理
-    if message_type == 1:
-        m.id = m.ids.ICP_ECHO
-        caps_data = j.get("CapsList",-1)
-        if !defined(caps_data) || j.get("Caps",-1) <= 0:
-            log("No caps yet")
-        else:
-            j = 0
-            for i in sql:
-                #print(i)
-                m.body.cap[j].id = i.CAPID
-                m.body.cap[j].version = i.CAPVER
-                m.body.cap[j].config = i.CAPCONFIG
-                j = j + 1
-        m.body.pos.lo = self_data.lon
-        m.body.pos.la = self_data.lat
-        m.body.pos.al = self_data.ele
-        m.body.speed = self_data.spd
-        m.body.heading = self_data.hea
-        m.body.accel.lo = self_data.longAcc
-        m.body.accel.la = self_data.latAcc
-        m.body.accel.vert = self_data.vertAcc
-        m.body.accel.yaw = self_data.yawRate
-        m.body.sourceId = j.get("Source Vehicle ID",-1)
-        m.body.destId = j.get("Peer Vehicle ID",-1)
-    elif message_type == 2:
+    if message_type == 2:
         m.id = m.ids.ICP_SUB
         m.body.op = j.get("OP",-1)
         m.body.topic = j.get("Topic",-1)

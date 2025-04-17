@@ -301,7 +301,16 @@ def core_sub2app():
                         sendMsg["mid"] = message["mid"]
                         pub2obu_queue.put(sendMsg)
                     #todo：文件处理 111-113
-                        
+                    case config.sendFile:
+                        data = message["msg"]
+                        sendMsg = {}
+                        sendMsg["mid"] = message["mid"]
+                        sendMsg["DestId"] = data["did"]
+                        sendMsg["context"] = data["context"]
+                        sendMsg["RL"] = data["rl"]
+                        sendMsg["PT"] = data["pt"]
+                        sendMsg["file"] = data["file"]
+                        pub2obu_queue.put(sendMsg)
                         
             """if time.time() - last_timer_send >= config.echo_time:
                 capsList = caps_instance.getCapability()
@@ -359,7 +368,9 @@ def core_sub2obu():
                 sendMsg["context"] = data["context"]
                 sendMsg["sid"] = data["sid"]
                 sendMsg["mid"] = data["mid"]
-                pub2app_socket.send_string(json.dumps(sendMsg, ensure_ascii=False))
+                topic = ""
+                topic_prefixed_message = f"{topic} {json.dumps(sendMsg, ensure_ascii=False)}"
+                pub2app_socket.send_string(topic_prefixed_message)
                 pubMsg = config.pubMsg.copy()
                 pubMsg["RT"] = 0
                 pubMsg["SourceId"] = config.source_id
@@ -381,6 +392,15 @@ def core_sub2obu():
                 sendMsg = {}
                 sendMsg["sid"] = data["sid"]
                 sendMsg["data"] = data["data"]
+                sendMsg["mid"] = data["mid"]
+                topic = ""
+                topic_prefixed_message = f"{topic} {json.dumps(sendMsg, ensure_ascii=False)}"
+                pub2app_socket.send_string(topic_prefixed_message)
+            elif message_type == config.sendFin:
+                sendMsg = {}
+                sendMsg["did"] = data["did"]
+                sendMsg["context"] = data["context"]
+                sendMsg["file"] = data["file"]
                 sendMsg["mid"] = data["mid"]
                 topic = ""
                 topic_prefixed_message = f"{topic} {json.dumps(sendMsg, ensure_ascii=False)}"
