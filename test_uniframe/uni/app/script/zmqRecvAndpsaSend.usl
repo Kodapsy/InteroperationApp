@@ -127,6 +127,7 @@ elif mid == 111:
     sj = toJson(s)
     zmq_publish(sj)
 else:
+    m = _UniMsg('icp') 
     if message_type == 2:
         m.id = m.ids.ICP_SUB
         m.body.op = j.get("OP",-1)

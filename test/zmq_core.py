@@ -6,22 +6,22 @@ import sys
 import uuid
 import glob
 import time
-#sys.path.append("/home/nvidia/mydisk/czl/InteroperationApp")
-sys.path.append("/home/gyb/InteroperationApp")
-import module.CapabilityManager as CapabilityManager
-import module.CollaborationGraphManager as CollaborationGraphManager
+sys.path.append("/home/nvidia/mydisk/czl/InteroperationApp")
+#sys.path.append("/home/czl/InteroperationApp")
+from module.CapabilityManager import CapabilityManager
+from module.CollaborationGraphManager import CollaborationGraphManager
 import config
 import module.TLV
 from module.sessionManager import SessionManager
+from module.logger import logger_decorator, global_logger
 import queue
 # 创建数据目录
 os.makedirs(config.data_dir, exist_ok=True)
-
 # 最大数据包大小
 MAX_SIZE = 1.4 * 1024
 MAX_FILES = 12
-caps_instance = CapabilityManager.CapabilityManager()
-maps_instance = CollaborationGraphManager.CollaborationGraphManager()
+caps_instance = CapabilityManager.getInstance()
+maps_instance = CollaborationGraphManager.getInstance()
 SM_instance = SessionManager.getInstance()
 # ZMQ 上下文
 context = zmq.Context()
@@ -30,15 +30,15 @@ def pub2obu_loop():
     """唯一绑定 obu_sub_port 的线程，负责转发消息到 OBU"""
     pub_socket = context.socket(zmq.PUB)
     pub_socket.bind(f"tcp://*:{config.obu_sub_port}")
-    print("[pub2obu_loop] 启动，等待消息发送到 OBU...")
+    global_logger.get_logger("global_log").info("[pub2obu_loop] 启动，等待消息发送到 OBU...")
 
     while True:
         try:
             msg = pub2obu_queue.get()  # 从队列中取出消息（阻塞）
-            print(f"[pub2obu_loop] 发送消息: {msg}")
+            global_logger.get_logger("global_log").info(f"[pub2obu_loop] 发送消息: {msg}")
             pub_socket.send_json(msg)
         except Exception as e:
-            print(f"[!] pub2obu_loop 发送失败: {e}")
+            global_logger.get_logger("global_log").info(f"[!] pub2obu_loop 发送失败: {e}")
 def clean_old_files():
     """如果 JSON 文件超过 MAX_FILES，删除最早的文件"""
     json_files = sorted(glob.glob(os.path.join(config.data_dir, "*.json")), key=os.path.getctime)  # 按创建时间排序
@@ -46,15 +46,16 @@ def clean_old_files():
         oldest_file = json_files.pop(0)  # 取出最早的文件
         try:
             os.remove(oldest_file)
-            print(f"[✘] Deleted old file: {oldest_file}")
+            global_logger.get_logger("global_log").info(f"[✘] Deleted old file: {oldest_file}")
         except Exception as e:
-            print(f"[!] Error deleting file {oldest_file}: {e}")
+            global_logger.get_logger("global_log").info(f"[!] Error deleting file {oldest_file}: {e}")
 
 def proxy_send():
     corexsub = context.socket(zmq.XSUB)
     corexsub.bind(f"tcp://*:{config.send_sub_port}") 
     relayxpub = context.socket(zmq.XPUB)
     relayxpub.bind(f"tcp://*:{config.send_pub_port}") 
+    global_logger.get_logger("global_log").info("[proxy_send] 代理启动，等待消息...")
     zmq.proxy(corexsub, relayxpub)
 
 def proxy_recv():
@@ -62,8 +63,8 @@ def proxy_recv():
     corexpub.bind(f"tcp://*:{config.recv_pub_port}")
     relayxsub = context.socket(zmq.XSUB)
     relayxsub.bind(f"tcp://*:{config.recv_sub_port}")
+    global_logger.get_logger("global_log").info("[proxy_recv] 代理启动，等待消息...")
     zmq.proxy(corexpub, relayxsub)
-
 
 def core_sub2app():
     """监听 `send_pub_port` """
@@ -74,7 +75,7 @@ def core_sub2app():
     pub2app_socket = context.socket(zmq.PUB)
     pub2app_socket.connect(f"tcp://{config.selfip}:{config.recv_sub_port}")
 
-    print("[core_sub2app] 线程启动，等待消息...")
+    global_logger.get_logger("global_log").info("[core_sub2app] 线程启动，等待消息...")
 
     count = 0
     last_timer_send = time.time()
@@ -82,21 +83,21 @@ def core_sub2app():
         try:
             if sub_socket.poll(100):
                 message = sub_socket.recv_string()
-                print(f"[DEBUG] 收到原始消息: {message}")
+                global_logger.get_logger("global_log").info(f"[DEBUG] 收到原始消息: {message}")
                 try:
                     message = json.loads(message)
                 except json.JSONDecodeError:
-                    print(f"[!] JSON 解码失败，跳过：{message}")
+                    global_logger.get_logger("global_log").info(f"[!] JSON 解码失败，跳过：{message}")
                     continue
 
                 if not isinstance(message, dict):
-                    print(f"[!] 消息不是字典类型，跳过：{message}")
+                    global_logger.get_logger("global_log").info(f"[!] 消息不是字典类型，跳过：{message}")
                     continue
 
                 if "mid" not in message:
-                    print(f"[!] 消息缺少 'mid' 字段，跳过：{message}")
+                    global_logger.get_logger("global_log").info(f"[!] 消息缺少 'mid' 字段，跳过：{message}")
                     continue
-                print(f"[Core] 收到消息 {count}")
+                global_logger.get_logger("global_log").info(f"[Core] 收到消息 {count}")
                 count += 1
                 # 消息处理
                 mid = message["mid"]
@@ -106,16 +107,18 @@ def core_sub2app():
                         tid = message["tid"]
                         data = message["msg"]
                         msg = { "tid" : tid }
-                        if data["act"] == config.appActLogin:
+                        act = data["act"]
+                        #global_logger.get_logger("global_log").info(act)
+                        if act == config.appActLogin:
                             flag = caps_instance.putCapability(appid, data["capId"], data["capVersion"], data["capConfig"])
                             msg["result"] = config.regack if flag else config.regnack
-                        if data["act"] == config.appActLogout:
+                        if act == config.appActLogout:
                             flag = caps_instance.deleteCapability(appid, data["capId"], data["capVersion"], data["capConfig"])
                             msg["result"] = config.delack if flag else config.delnack
-                        if data["act"] == config.appActopen:
+                        if act == config.appActopen:
                             flag = caps_instance.updateBroadcast(appid, data["capId"], data["capVersion"], data["capConfig"], True)
                             msg["result"] = config.openack if flag else config.opennack
-                        if data["act"] == config.appActclose:
+                        if act == config.appActclose:
                             flag = caps_instance.updateBroadcast(appid, data["capId"], data["capVersion"], data["capConfig"], False)
                             msg["result"] = config.closeack if flag else config.closenack
                         pub2app_socket.send_string(json.dumps(msg, ensure_ascii=False)) 
@@ -145,9 +148,9 @@ def core_sub2app():
                         #会话管理。。。
                         smFlag = SM_instance.update_state(message["mid"], data["context"])
                         if smFlag:
-                            print(f"当前会话状态: {SM_instance.sessions}")
+                            global_logger.get_logger("global_log").info(f"当前会话状态: {SM_instance.sessions}")
                         else:
-                            print(f"会话状态更新失败")
+                            global_logger.get_logger("global_log").info(f"会话状态更新失败")
                         sendMsg = config.subMsg.copy()
                         sendMsg["RT"] = 0
                         sendMsg["SourceId"] = data["oid"]
@@ -159,9 +162,9 @@ def core_sub2app():
                         context_id = data["context"]
                         # 清理空白字符、只保留0和1
                         # 强制修剪为64位
-                        print(len(context_id))
+                        global_logger.get_logger("global_log").info(len(context_id))
                         if len(context_id) > 64:
-                            print(f"[!] ContextId 超长，已截断: 原始 {len(context_id)} → 64")
+                            global_logger.get_logger("global_log").info(f"[!] ContextId 超长，已截断: 原始 {len(context_id)} → 64")
                             context_id = context_id[:64]
                         TLVmsg = {
                             "CommonDataType":data["coopMapType"],
@@ -181,9 +184,9 @@ def core_sub2app():
                         #会话管理。。。
                         smFlag = SM_instance.update_state(message["mid"], data["context"])
                         if smFlag:
-                            print(f"当前会话状态: {SM_instance.sessions}")
+                            global_logger.get_logger("global_log").info(f"当前会话状态: {SM_instance.sessions}")
                         else:
-                            print(f"会话状态更新失败")
+                            global_logger.get_logger("global_log").info(f"会话状态更新失败")
                         sendMsg = config.pubMsg.copy()
                         sendMsg["RT"] = 1
                         sendMsg["SourceId"] = data["oid"]
@@ -210,9 +213,9 @@ def core_sub2app():
                         #会话管理
                         smFlag = SM_instance.update_state(message["mid"], data["context"], data["act"])
                         if smFlag:
-                            print(f"当前会话状态: {SM_instance.sessions}")
+                            global_logger.get_logger("global_log").info(f"当前会话状态: {SM_instance.sessions}")
                         else:
-                            print(f"会话状态更新失败")
+                            global_logger.get_logger("global_log").info(f"会话状态更新失败")
                         sendMsg = config.subMsg.copy()
                         sendMsg["RT"] = 1
                         sendMsg["SourceId"] = data["oid"]
@@ -239,9 +242,9 @@ def core_sub2app():
                         #会话管理
                         smFlag = SM_instance.update_state(message["mid"], data["context"], data["act"])
                         if smFlag:
-                            print(f"当前会话状态: {SM_instance.sessions}")
+                            global_logger.get_logger("global_log").info(f"当前会话状态: {SM_instance.sessions}")
                         else:
-                            print(f"会话状态更新失败")
+                            global_logger.get_logger("global_log").info(f"会话状态更新失败")
                         sendMsg = config.pubMsg.copy()
                         sendMsg["RT"] = 1
                         sendMsg["SourceId"] = data["oid"]
@@ -269,9 +272,9 @@ def core_sub2app():
                         #会话管理
                         smFlag = SM_instance.update_state(message["mid"], data["context"])
                         if smFlag:
-                            print(f"当前会话状态: {SM_instance.sessions}")
+                            global_logger.get_logger("global_log").info(f"当前会话状态: {SM_instance.sessions}")
                         else:
-                            print(f"会话状态更新失败")
+                            global_logger.get_logger("global_log").info(f"会话状态更新失败")
                         sendMsg = {}
                         sendMsg["RL"] = data["rl"]
                         sendMsg["DestId"] = data["did"]
@@ -291,9 +294,9 @@ def core_sub2app():
                         #会话管理
                         smFlag = SM_instance.update_state(message["mid"], data["context"])
                         if smFlag:
-                            print(f"当前会话状态: {SM_instance.sessions}")
+                            global_logger.get_logger("global_log").info(f"当前会话状态: {SM_instance.sessions}")
                         else:
-                            print(f"会话状态更新失败")
+                            global_logger.get_logger("global_log").info(f"会话状态更新失败")
                         sendMsg = {}
                         sendMsg["sid"] = data["sid"]
                         sendMsg["did"] = data["did"]
@@ -301,16 +304,7 @@ def core_sub2app():
                         sendMsg["mid"] = message["mid"]
                         pub2obu_queue.put(sendMsg)
                     #todo：文件处理 111-113
-                    case config.sendFile:
-                        data = message["msg"]
-                        sendMsg = {}
-                        sendMsg["mid"] = message["mid"]
-                        sendMsg["DestId"] = data["did"]
-                        sendMsg["context"] = data["context"]
-                        sendMsg["RL"] = data["rl"]
-                        sendMsg["PT"] = data["pt"]
-                        sendMsg["file"] = data["file"]
-                        pub2obu_queue.put(sendMsg)
+                        
                         
             """if time.time() - last_timer_send >= config.echo_time:
                 capsList = caps_instance.getCapability()
@@ -323,10 +317,10 @@ def core_sub2app():
                     "Peer Vehicle ID": config.board_id
                 }
                 pub2obu_queue.put(sendMsg)
-                print(f"[Core] 发送 echo 消息: {echo_message}")
+                global_logger.get_logger("global_log").info(f"[Core] 发送 echo 消息: {echo_message}")
                 last_timer_send = time.time()"""
         except Exception as e:
-            print(f"[!] core_sub2app 发生错误: {e}")
+            global_logger.get_logger("global_log").info(f"[!] core_sub2app 发生错误: {e}")
 
 def core_sub2obu():
     """监听 `obu_pub_port` 并转发到 `recv_sub_port`"""
@@ -337,13 +331,13 @@ def core_sub2obu():
     pub2app_socket = context.socket(zmq.PUB)
     pub2app_socket.connect(f"tcp://{config.selfip}:{config.recv_sub_port}")
 
-    print("[core_sub2obu] 线程启动，等待消息...")
+    global_logger.get_logger("global_log").info("[core_sub2obu] 线程启动，等待消息...")
 
     count = 0
     while True:
         try:
             message = sub_socket.recv_string()
-            print(f"[Core] 收到消息 {count}: {message}")
+            global_logger.get_logger("global_log").info(f"[Core] 收到消息 {count}: {message}")
             count += 1
             data = json.loads(message)
             message_type = data.get("Message_type")
@@ -368,9 +362,7 @@ def core_sub2obu():
                 sendMsg["context"] = data["context"]
                 sendMsg["sid"] = data["sid"]
                 sendMsg["mid"] = data["mid"]
-                topic = ""
-                topic_prefixed_message = f"{topic} {json.dumps(sendMsg, ensure_ascii=False)}"
-                pub2app_socket.send_string(topic_prefixed_message)
+                pub2app_socket.send_string(json.dumps(sendMsg, ensure_ascii=False))
                 pubMsg = config.pubMsg.copy()
                 pubMsg["RT"] = 0
                 pubMsg["SourceId"] = config.source_id
@@ -396,19 +388,10 @@ def core_sub2obu():
                 topic = ""
                 topic_prefixed_message = f"{topic} {json.dumps(sendMsg, ensure_ascii=False)}"
                 pub2app_socket.send_string(topic_prefixed_message)
-            elif message_type == config.sendFin:
-                sendMsg = {}
-                sendMsg["did"] = data["did"]
-                sendMsg["context"] = data["context"]
-                sendMsg["file"] = data["file"]
-                sendMsg["mid"] = data["mid"]
-                topic = ""
-                topic_prefixed_message = f"{topic} {json.dumps(sendMsg, ensure_ascii=False)}"
-                pub2app_socket.send_string(topic_prefixed_message)
             else:
-                print(f"[!] 未知消息类型: {data['Message_type']}")
+                global_logger.get_logger("global_log").info(f"[!] 未知消息类型: {data['Message_type']}")
         except Exception as e:
-            print(f"[!] core_sub2obu 发生错误: {e}")
+            global_logger.get_logger("global_log").info(f"[!] core_sub2obu 发生错误: {e}")
 
 def core_echoPub():
     pub_socket = context.socket(zmq.PUB)
@@ -418,7 +401,7 @@ def core_echoPub():
 def main():
     """启动所有线程"""
     threads = []
-
+    global_logger.enable_module("global_log")
     # 启动 ZeroMQ 代理
     t_proxy_send = threading.Thread(target=proxy_send, daemon=True)
     threads.append(t_proxy_send)
@@ -441,14 +424,15 @@ def main():
     for t in threads:
         t.start()
 
-    print("[Main] 所有线程已启动，等待消息...")
+    global_logger.get_logger("global_log").info("[Main] 所有线程已启动，等待消息...")
 
     # 监听 Ctrl + C 退出
     try:
         while True:
             time.sleep(1)
     except KeyboardInterrupt:
-        print("\n[✔] 程序已退出")
+        global_logger.shutdown()
+        global_logger.get_logger("global_log").info("\n[✔] 程序已退出")
         exit(0)
 
 if __name__ == "__main__":
