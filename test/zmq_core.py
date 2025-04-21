@@ -6,8 +6,8 @@ import sys
 import uuid
 import glob
 import time
-#sys.path.append("/home/nvidia/mydisk/czl/InteroperationApp")
-sys.path.append("/home/czl/InteroperationApp")
+sys.path.append("/home/nvidia/mydisk/czl/InteroperationApp")
+#sys.path.append("/home/czl/InteroperationApp")
 from module.CapabilityManager import CapabilityManager
 from module.CollaborationGraphManager import CollaborationGraphManager
 import config
@@ -33,13 +33,16 @@ def pub2obu_loop():
     pub_socket = context.socket(zmq.PUB)
     pub_socket.bind(f"tcp://*:{config.obu_sub_port}")
     global_logger.get_logger("global_log").info("[pub2obu_loop] 启动，等待消息发送到 OBU...")
+    global_logger.get_logger("global_log").info("[pub2obu_loop] 启动，等待消息发送到 OBU...")
 
     while True:
         try:
             msg = pub2obu_queue.get()  # 从队列中取出消息（阻塞）
             global_logger.get_logger("global_log").info(f"[pub2obu_loop] 发送消息: {msg}")
+            global_logger.get_logger("global_log").info(f"[pub2obu_loop] 发送消息: {msg}")
             pub_socket.send_json(msg)
         except Exception as e:
+            global_logger.get_logger("global_log").info(f"[!] pub2obu_loop 发送失败: {e}")
             global_logger.get_logger("global_log").info(f"[!] pub2obu_loop 发送失败: {e}")
 def clean_old_files():
     """如果 JSON 文件超过 MAX_FILES，删除最早的文件"""
@@ -49,7 +52,9 @@ def clean_old_files():
         try:
             os.remove(oldest_file)
             global_logger.get_logger("global_log").info(f"[✘] Deleted old file: {oldest_file}")
+            global_logger.get_logger("global_log").info(f"[✘] Deleted old file: {oldest_file}")
         except Exception as e:
+            global_logger.get_logger("global_log").info(f"[!] Error deleting file {oldest_file}: {e}")
             global_logger.get_logger("global_log").info(f"[!] Error deleting file {oldest_file}: {e}")
 
 def proxy_send():
@@ -58,6 +63,7 @@ def proxy_send():
     relayxpub = context.socket(zmq.XPUB)
     relayxpub.bind(f"tcp://*:{config.send_pub_port}") 
     global_logger.get_logger("global_log").info("[proxy_send] 代理启动，等待消息...")
+    global_logger.get_logger("global_log").info("[proxy_send] 代理启动，等待消息...")
     zmq.proxy(corexsub, relayxpub)
 
 def proxy_recv():
@@ -65,6 +71,7 @@ def proxy_recv():
     corexpub.bind(f"tcp://*:{config.recv_pub_port}")
     relayxsub = context.socket(zmq.XSUB)
     relayxsub.bind(f"tcp://*:{config.recv_sub_port}")
+    global_logger.get_logger("global_log").info("[proxy_recv] 代理启动，等待消息...")
     global_logger.get_logger("global_log").info("[proxy_recv] 代理启动，等待消息...")
     zmq.proxy(corexpub, relayxsub)
 
@@ -78,6 +85,7 @@ def core_sub2app():
     pub2app_socket.connect(f"tcp://{config.selfip}:{config.recv_sub_port}")
 
     global_logger.get_logger("global_log").info("[core_sub2app] 线程启动，等待消息...")
+    global_logger.get_logger("global_log").info("[core_sub2app] 线程启动，等待消息...")
 
     count = 0
     last_timer_send = time.time()
@@ -86,9 +94,11 @@ def core_sub2app():
             if sub_socket.poll(100):
                 message = sub_socket.recv_string()
                 global_logger.get_logger("global_log").info(f"[DEBUG] 收到原始消息: {message}")
+                global_logger.get_logger("global_log").info(f"[DEBUG] 收到原始消息: {message}")
                 try:
                     message = json.loads(message)
                 except json.JSONDecodeError:
+                    global_logger.get_logger("global_log").info(f"[!] JSON 解码失败，跳过：{message}")
                     global_logger.get_logger("global_log").info(f"[!] JSON 解码失败，跳过：{message}")
                     continue
 
@@ -403,7 +413,7 @@ def core_echoPub():
 def main():
     """启动所有线程"""
     threads = []
-
+    global_logger.enable_module("global_log")
     # 启动 ZeroMQ 代理
     t_proxy_send = threading.Thread(target=proxy_send, daemon=True)
     threads.append(t_proxy_send)

@@ -24,7 +24,7 @@ class Logger:
         self.lock = Lock()
         self.max_bytes = max_bytes
         self.backup_count = backup_count
-        #self._start_listener()
+        
 
     def _start_listener(self):
         self.listener = logging.handlers.QueueListener(self.queue, *self.handlers, respect_handler_level=True)
@@ -39,8 +39,6 @@ class Logger:
             self.enabled_modules.discard(module_name)
 
     def get_logger(self, module_name):
-        #if self.listener is None:
-         #   self._start_listener()
         return _LoggerProxy(self, module_name)
 
     def _get_or_create_logger(self, module_name, level_name):
@@ -67,9 +65,7 @@ class Logger:
 
         logger.addHandler(queue_handler)
         self.handlers.append(file_handler)
-        
         self._start_listener()
-
         self.loggers[key] = logger
         return logger
 
@@ -132,7 +128,7 @@ def logger_decorator(module_name: str, level: str = 'INFO', message: str = ''):
             entry_msg = f"{prefix}调用 {func.__name__}({full_args})"
 
             try:
-                logger.log( level, entry_msg)
+                logger.log(level, entry_msg)
 
                 result = func(*args, **kwargs)
 
