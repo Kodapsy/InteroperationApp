@@ -27,8 +27,9 @@ class Logger:
         
 
     def _start_listener(self):
-        self.listener = logging.handlers.QueueListener(self.queue, *self.handlers, respect_handler_level=True)
-        self.listener.start()
+        if self.listener is None:
+            self.listener = logging.handlers.QueueListener(self.queue, *self.handlers, respect_handler_level=True)
+            self.listener.start()
 
     def enable_module(self, module_name):
         with self.lock:
@@ -64,7 +65,11 @@ class Logger:
         queue_handler.setFormatter(formatter)
 
         logger.addHandler(queue_handler)
-        self.handlers.append(file_handler)
+
+        # 防止重复添加
+        if file_handler not in self.handlers:
+            self.handlers.append(file_handler)
+        
         self._start_listener()
         self.loggers[key] = logger
         return logger
