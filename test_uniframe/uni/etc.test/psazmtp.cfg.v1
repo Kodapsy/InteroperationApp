@@ -1,0 +1,4 @@
+ServerPort 27170
+ServerIp _LOCAL_IP_
+ServerSockType PUB
+AppKey 400

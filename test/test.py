@@ -1,7 +1,7 @@
 import time
 import json
 import sys
-#sys.path.append("/home/nvidia/mydisk/czl/InteroperationApp")
+sys.path.append("/home/nvidia/mydisk/czl/InteroperationApp")
 #sys.path.append("/home/czl/InteroperationApp")
 sys.path.append("/home/czl/InteroperationApp")
 from module.zmq_server import ICPServer, ICPClient
@@ -10,7 +10,6 @@ def main():
     print("🚀 ICPServer 测试程序启动")
     app_id = input("请输入 app_id（默认 0）: ") or 0
     server = ICPServer(app_id=app_id)
-    client = ICPClient()
 
     while True:
         print("\n请选择操作类型:")
@@ -68,16 +67,16 @@ def main():
                 server.brocastSub(tid, oid, topic, context, coopMap, coopMapType, bearCap)
 
             elif choice == 4:
-                tid = int(input("tid: "))
-                oid = input("oid: ")
-                did = input("did: ")
-                topic = int(input("topic: "))
-                context = input("context（二进制字符串 128 位）: ")
-                coopMap_input = input("coopMap: ")
+                tid = 1
+                oid = "A12345"
+                did = "津A12345"
+                topic = 12345
+                context = "ffffffffffffffffffffffffffffffff"
+                coopMap_input = "11111111111111111111"
                 coopMap = coopMap_input.encode()  # 先转 bytes
                 coopMap = coopMap.hex()
-                coopMapType = int(input("coopMapType: "))
-                bearCap = int(input("bearCap: "))
+                coopMapType = 0
+                bearCap = 0
                 server.brocastSubnty(tid, oid, did, topic, context, coopMap, coopMapType, bearCap)
 
             elif choice == 5:
@@ -95,17 +94,17 @@ def main():
                 server.subMessage(tid, oid, did, topic, act, context, coopMap, coopMapType, bearInfo)
 
             elif choice == 6:
-                tid = int(input("tid: "))
-                oid = input("oid: ")
-                did = input("did: ")
-                topic = int(input("topic: "))
-                act = int(input("act 操作: "))
-                context = input("context（二进制字符串 128 位）: ")
-                coopMap_input = input("coopMap: ")
+                tid = 1
+                oid = "A12345"
+                did = "津A12345"
+                topic = "12345"
+                act = "1"
+                context = "ffffffffffffffffffffffffffffffff"
+                coopMap_input = "111111111111111111111111111111111111"
                 coopMap = coopMap_input.encode()  # 先转 bytes
                 coopMap = coopMap.hex()
-                coopMapType = int(input("coopMapType: "))
-                bearCap = int(input("bearCap: "))
+                coopMapType = 0
+                bearCap = 0
                 server.notifyMessage(tid, oid, did, topic, act, context, coopMap, coopMapType, bearCap)
 
             elif choice == 7:

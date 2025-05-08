@@ -2,9 +2,12 @@ import zmq
 import json
 import sys
 import os
+import base64 # Added for Base64 encoding
+
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.append(parent_dir)
 import config
+
 class ICPServer:
     def __init__(self, app_id:int):
         """
@@ -19,11 +22,13 @@ class ICPServer:
         self.socket = self.context.socket(zmq.PUB)
         self.socket.connect(f"tcp://{config.selfip}:{config.send_sub_port}")
         print(f"Server started")
+
     def send(self, message: dict):
         print(f"Sending message: {message}")
         self.socket.send_string(json.dumps(message, ensure_ascii=False))
         #status = self.socket.getsockopt(zmq.EVENTS)
         #print(f"Socket status: {status}")
+
     def AppMessage(self, 
                    CapID:int,
                    CapVersion:int,
@@ -59,7 +64,7 @@ class ICPServer:
                    tid:0,
                    oid:str,
                    topic:int,
-                   coopMap:str,
+                   coopMap:bytes, # Changed type hint from str to bytes
                    coopMapType:int
                    ):
         """
@@ -67,10 +72,14 @@ class ICPServer:
         :param tid: 事物标识（transaction id）	应用与控制层之间的请求与应答消息的关联，随机初始化并自增，保证唯一
         :param oid: 源端标识	广播SUB的源端节点标识（仅通信控制->应用接口携带）
         :param topic: 能力标识	广播订购的topic
-        :param coopMap: 置信图/协作图	携带用于发送的置信图或协作图
+        :param coopMap: 置信图/协作图 (binary data) 携带用于发送的置信图或协作图
         """
         if oid is None or topic is None or coopMap is None or coopMapType is None:
-            raise ValueError("oid, topic 和 cooMap 不能为空！请提供有效的数据。")
+            raise ValueError("oid, topic, coopMap 和 coopMapType 不能为空！请提供有效的数据。")
+        
+        # Convert binary coopMap to Base64 encoded string
+        coopMap_str = base64.b64encode(coopMap).decode('utf-8')
+        
         message = {
             "mid":config.boardCastPub,
             "app_id": self.app_id,
@@ -78,7 +87,7 @@ class ICPServer:
             "msg":{
                 "oid": oid,
                 "topic": topic,
-                "coopMap": coopMap,
+                "coopMap": coopMap_str, # Use encoded string
                 "coopMapType": coopMapType
             }
         }
@@ -89,7 +98,7 @@ class ICPServer:
                    oid:str,
                    topic:int,
                    context:str,
-                   coopMap:str,
+                   coopMap:bytes, # Changed type hint from str to bytes
                    coopMapType:int,
                    bearCap:int
                    ):
@@ -99,12 +108,15 @@ class ICPServer:
         :param oid: 源端标识	广播SUB的源端节点标识（仅通信控制->应用接口携带）
         :param topic: 能力标识	广播订购的topic
         :param context: 会上下文标识	应用创建的用于区分对话的标识
-        :param coopMap: 置信图/协作图	携带用于发送的置信图或协作图
+        :param coopMap: 置信图/协作图 (binary data) 携带用于发送的置信图或协作图
         :param bearcap: 承载能力描述	1：要求携带用于描述自身承载能力的信息
-
         """
         if oid is None or topic is None or context is None or coopMap is None or bearCap is None or coopMapType is None:
-            raise ValueError("oid, topic, context, coopMap 和 bearcap 不能为空！请提供有效的数据。")
+            raise ValueError("oid, topic, context, coopMap, coopMapType 和 bearCap 不能为空！请提供有效的数据。")
+
+        # Convert binary coopMap to Base64 encoded string
+        coopMap_str = base64.b64encode(coopMap).decode('utf-8')
+
         message = {
             "mid":config.boardCastSub,
             "app_id": self.app_id,
@@ -113,7 +125,7 @@ class ICPServer:
                 "oid": oid,
                 "topic": topic,
                 "context": context,
-                "coopMap": coopMap,
+                "coopMap": coopMap_str, # Use encoded string
                 "coopMapType": coopMapType,
                 "bearCap": bearCap
             }
@@ -126,22 +138,26 @@ class ICPServer:
                      did:str,
                      topic:int,
                      context:str,
-                     coopMap:str,
+                     coopMap:bytes, # Changed type hint from str to bytes
                      coopMapType:int,
-                     bearcap:int
+                     bearCap:int
                      ):
         """
-        广播订购消息
+        广播订购通知消息 (brocastSubNotify seems to be the intended name based on config.boardCastSubNotify)
         :param tid: 事物标识（transaction id）	应用与控制层之间的请求与应答消息的关联，随机初始化并自增，保证唯一
         :param oid: 源端标识	广播SUB的源端节点标识（仅通信控制->应用接口携带）
         :param did: 目的端标识	广播SUB的目的端节点标识（仅通信控制->应用接口携带）
         :param topic: 能力标识	广播订购的topic
         :param context: 会上下文标识	应用创建的用于区分对话的标识
-        :param coopMap: 置信图/协作图	携带用于发送的置信图或协作图
+        :param coopMap: 置信图/协作图 (binary data) 携带用于发送的置信图或协作图
         :param bearcap: 承载能力描述	1：要求携带用于描述自身承载能力的信息
         """
-        if oid is None or did is None or topic is None or context is None or coopMap is None or bearcap is None or coopMapType is None:
-            raise ValueError("oid, did, topic, context, coopMap 和 bearcap 不能为空！请提供有效的数据。")
+        if oid is None or did is None or topic is None or context is None or coopMap is None or bearCap is None or coopMapType is None:
+            raise ValueError("oid, did, topic, context, coopMap, coopMapType 和 bearCap 不能为空！请提供有效的数据。")
+
+        # Convert binary coopMap to Base64 encoded string
+        coopMap_str = base64.b64encode(coopMap).decode('utf-8')
+
         message = {
             "mid":config.boardCastSubNotify,
             "app_id": self.app_id,
@@ -151,9 +167,9 @@ class ICPServer:
                 "did": did,
                 "topic": topic,
                 "context": context,
-                "coopMap": coopMap,
+                "coopMap": coopMap_str, # Use encoded string
                 "coopMapType": coopMapType,
-                "bearcap": bearcap
+                "bearCap": bearCap
             }
         }
         self.send(message)      
@@ -165,7 +181,7 @@ class ICPServer:
                    topic:int,
                    act:int,
                    context:str,
-                   coopMap:str,
+                   coopMap:bytes, # Changed type hint from str to bytes
                    coopMapType:int,
                    bearInfo:int
                    ):
@@ -176,11 +192,15 @@ class ICPServer:
         :param did: 目的端标识	广播SUB的目的端节点标识（仅通信控制->应用接口携带）
         :param topic: 能力标识	广播订购的topic
         :param context: 会上下文标识	应用创建的用于区分对话的标识
-        :param coopMap: 置信图/协作图	携带用于发送的置信图或协作图
+        :param coopMap: 置信图/协作图 (binary data) 携带用于发送的置信图或协作图
         :param bearInfo: 承载地址描述	1：要求携带用于描述自身承载地址的信息
         """
         if oid is None or did is None or topic is None or context is None or coopMap is None or bearInfo is None or coopMapType is None or act is None:
-            raise ValueError("oid, did, topic, act, context, coopMap 和 bearcap 不能为空！请提供有效的数据。")
+            raise ValueError("oid, did, topic, act, context, coopMap, coopMapType 和 bearInfo 不能为空！请提供有效的数据。")
+
+        # Convert binary coopMap to Base64 encoded string
+        coopMap_str = base64.b64encode(coopMap).decode('utf-8')
+        
         message = {
             "mid":config.subScribe,
             "app_id": self.app_id,
@@ -191,7 +211,7 @@ class ICPServer:
                 "topic": topic,
                 "act": act,
                 "context": context,
-                "coopMap": coopMap,
+                "coopMap": coopMap_str, # Use encoded string
                 "coopMapType": coopMapType,
                 "bearinfo": bearInfo
             }
@@ -205,7 +225,7 @@ class ICPServer:
                       topic:int,
                       act:int,
                       context:str,
-                      coopMap:str,
+                      coopMap:bytes, # Changed type hint from str to bytes
                       coopMapType:int,
                       bearCap:int
                       ):
@@ -216,11 +236,15 @@ class ICPServer:
         :param did: 目的端标识	广播SUB的目的端节点标识（仅通信控制->应用接口携带）
         :param topic: 能力标识	广播订购的topic
         :param context: 会上下文标识	应用创建的用于区分对话的标识
-        :param coopMap: 置信图/协作图	携带用于发送的置信图或协作图
+        :param coopMap: 置信图/协作图 (binary data) 携带用于发送的置信图或协作图
         :param bearCap: 承载能力描述	1：要求携带用于描述自身承载能力的信息
         """
         if oid is None or did is None or topic is None or context is None or coopMap is None or bearCap is None or coopMapType is None or act is None:
-            raise ValueError("oid, did, topic, act, context, coopMap 和 bearCap 不能为空！请提供有效的数据。")
+            raise ValueError("oid, did, topic, act, context, coopMap, coopMapType 和 bearCap 不能为空！请提供有效的数据。")
+
+        # Convert binary coopMap to Base64 encoded string
+        coopMap_str = base64.b64encode(coopMap).decode('utf-8')
+
         message = {
             "mid":config.notify,
             "app_id": self.app_id,
@@ -231,7 +255,7 @@ class ICPServer:
                 "topic": topic,
                 "act": act,
                 "context": context,
-                "coopMap": coopMap,
+                "coopMap": coopMap_str, # Use encoded string
                 "coopMapType": coopMapType,
                 "bearCap": bearCap
             }
@@ -241,7 +265,7 @@ class ICPServer:
     def streamSendreq(self,
                       did:str,
                       context:str,
-                      rl:1,
+                      rl:1, # Default value for rl, type should be int
                       pt:int
                       ):
         """
@@ -251,6 +275,7 @@ class ICPServer:
         :param rl: 流数据的质量保证	雷达数据等默认需要 RL=1
         :param pt: 数据类型	请求数据类型
         """
+        # rl:1 in signature implies a default value, but type hint is missing. Assuming int.
         if did is None or context is None or rl is None or pt is None:
             raise ValueError("did, context, rl 和 pt 不能为空！请提供有效的数据。")
         message = {
@@ -264,9 +289,10 @@ class ICPServer:
             }
         }
         self.send(message)
+
     def streamSend(self,
                    sid:str,
-                   data:str
+                   data:str # Assuming data is already a string or JSON-serializable. If binary, similar encoding needed.
                    ):
         """
         流发送
@@ -280,10 +306,11 @@ class ICPServer:
             "app_id": self.app_id,
             "msg":{
                 "sid": sid,
-                "data": data
+                "data": data # If 'data' can be binary, it would need encoding too.
             }
         }
         self.send(message)
+
     def streamSendend(self,
                       did:str,
                       context:str,
@@ -309,9 +336,9 @@ class ICPServer:
         self.send(message)
     
     def sendFile(self,
-                 did:int,
+                 did:int, # Assuming did is int based on docstring; original code has str
                  context:str,
-                 rl:1,
+                 rl:1, # Default value for rl, type should be int
                  pt:int,
                  file:str
                  ):
@@ -323,6 +350,8 @@ class ICPServer:
         :param pt: 数据类型	请求数据类型
         :param file:文件路径	发送文件的存储路径与文件名
         """
+        # rl:1 in signature implies a default value, but type hint is missing. Assuming int.
+        # did type hint in signature is int, docstring implies it's an identifier.
         if did is None or context is None or rl is None or pt is None or file is None:
             raise ValueError("did, context, rl, pt 和 file 不能为空！请提供有效的数据。")
         message = {
@@ -358,9 +387,26 @@ class ICPClient:
         message = self.socket.recv_string()
         try:
             # 判断是否可能包含 topic（按第一个空格拆分）
-            topic, json_part = message.split(" ", 1)
-            parsed_message = json.loads(json_part)
+            # This logic assumes topic is always present if socket subscribes with non-empty topic.
+            # If topic is empty, recv_string() might not prefix it.
+            # A more robust way might be to check if the message starts with the subscribed topic.
+            # However, ZMQ SUB sockets with topic filter usually deliver messages prefixed with the topic.
+            parts = message.split(" ", 1)
+            if len(parts) == 2: # Potentially topic and JSON
+                _topic, json_part = parts # _topic might be used or discarded
+                parsed_message = json.loads(json_part)
+            else: # No space, assume entire message is JSON (for cases with empty topic subscription)
+                parsed_message = json.loads(message)
             return parsed_message
         except json.JSONDecodeError:
             print(f"[!] Failed to decode message: {message}")
             return None
+        except ValueError: # Handles cases where split might fail if message isn't as expected
+            print(f"[!] Malformed message structure (expected topic and JSON or just JSON): {message}")
+            # Attempt to parse as plain JSON if splitting failed or wasn't appropriate
+            try:
+                parsed_message = json.loads(message)
+                return parsed_message
+            except json.JSONDecodeError:
+                print(f"[!] Failed to decode message as plain JSON either: {message}")
+                return None
