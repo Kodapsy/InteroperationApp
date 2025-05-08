@@ -5,3 +5,18 @@
 检测到 KeyboardInterrupt，开始关闭程序...
 [2025-05-07 01:33:03,307] [app.main.INFO] INFO - 开始关闭程序资源...
 [2025-05-07 01:33:03,307] [app.main.INFO] INFO - 正在关闭日志系统...
+[2025-05-08 21:18:03,358] [app.core_obu.INFO] INFO - [core_sub2obu] 线程启动，等待来自 OBU 的消息...
+[2025-05-08 21:18:03,358] [app.main.INFO] INFO - 线程 'CoreSubToOBUThread' 已启动。
+[2025-05-08 21:18:03,358] [app.main.INFO] INFO - [Main] 所有核心线程已启动，应用程序运行中...
+[2025-05-08 21:30:05,256] [app.core_app.INFO] INFO - [core_sub2app] 收到已解析消息 (count 0), mid: 22
+[2025-05-08 21:30:05,256] [app.core_app.INFO] INFO - core_sub2app: 处理 notify
+[2025-05-08 21:30:05,258] [app.core_app.INFO] INFO - core_sub2app: notify, topic '12345', 放入 pub2obu_queue
+[2025-05-08 21:30:05,258] [app.pub2obu.INFO] INFO - [pub2obu_loop] 发送消息: {'V': 0, 'RT': 1, 'Message Type': 3, 'Length': 0, 'SourceID': '', 'DestID': None, 'OP': 1, 'Topic': 12345, 'Payload': '000E000400000000000F00203659436135352B6C3535714535593250354C3263355A752B3559614635613635000D000400000000000C0010DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD0006000400000016', 'PayloadType': 2, 'PayloadLength': 160, 'EncodeMode': 1, 'SourceId': 'A12345', 'DestId': '津A12345'}
+[2025-05-08 21:34:55,600] [app.core_app.INFO] INFO - [core_sub2app] 收到已解析消息 (count 1), mid: 22
+[2025-05-08 21:34:55,600] [app.core_app.INFO] INFO - core_sub2app: 处理 notify
+[2025-05-08 21:34:55,601] [app.core_app.INFO] INFO - core_sub2app: notify, topic '12345', 放入 pub2obu_queue
+[2025-05-08 21:34:55,602] [app.pub2obu.INFO] INFO - [pub2obu_loop] 发送消息: {'V': 0, 'RT': 1, 'Message Type': 3, 'Length': 0, 'SourceID': '', 'DestID': None, 'OP': 1, 'Topic': 12345, 'Payload': '000E000400000000000F00203659436135352B6C3535714535593250354C3263355A752B3559614635613635000D000400000000000C0010DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD0006000400000016', 'PayloadType': 2, 'PayloadLength': 160, 'EncodeMode': 1, 'SourceId': 'A12345', 'DestId': '津A12345'}
+[2025-05-08 21:37:28,088] [app.core_app.INFO] INFO - [core_sub2app] 收到已解析消息 (count 2), mid: 22
+[2025-05-08 21:37:28,088] [app.core_app.INFO] INFO - core_sub2app: 处理 notify
+[2025-05-08 21:37:28,090] [app.core_app.INFO] INFO - core_sub2app: notify, topic '12345', 放入 pub2obu_queue
+[2025-05-08 21:37:28,091] [app.pub2obu.INFO] INFO - [pub2obu_loop] 发送消息: {'V': 0, 'RT': 1, 'Message Type': 3, 'Length': 0, 'SourceID': '', 'DestID': None, 'OP': 1, 'Topic': 12345, 'Payload': '000E000400000000000F00203659436135352B6C3535714535593250354C3263355A752B3559614635613635000D000400000000000C0010DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD0006000400000016', 'PayloadType': 2, 'PayloadLength': 160, 'EncodeMode': 1, 'SourceId': 'A12345', 'DestId': '津A12345'}
