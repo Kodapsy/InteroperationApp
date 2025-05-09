@@ -24,3 +24,116 @@
 [2025-05-08 21:37:28,088] [app.core_app.INFO] INFO - core_sub2app: 处理 notify
 [2025-05-08 21:37:28,090] [app.core_app.INFO] INFO - core_sub2app: notify, topic '12345', 放入 pub2obu_queue
 [2025-05-08 21:37:28,091] [app.pub2obu.INFO] INFO - [pub2obu_loop] 发送消息: {'V': 0, 'RT': 1, 'Message Type': 3, 'Length': 0, 'SourceID': '', 'DestID': None, 'OP': 1, 'Topic': 12345, 'Payload': '000E000400000000000F00203659436135352B6C3535714535593250354C3263355A752B3559614635613635000D000400000000000C0010DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD0006000400000016', 'PayloadType': 2, 'PayloadLength': 160, 'EncodeMode': 1, 'SourceId': 'A12345', 'DestId': '津A12345'}
+[2025-05-08 21:47:05,586] [app.core_app.INFO] INFO - [core_sub2app] 收到已解析消息 (count 3), mid: 22
+[2025-05-08 21:47:05,587] [app.core_app.INFO] INFO - core_sub2app: 处理 notify
+[2025-05-08 21:47:05,587] [app.core_app.INFO] INFO - core_sub2app: notify, topic '12345', 放入 pub2obu_queue
+[2025-05-08 21:47:05,587] [app.pub2obu.INFO] INFO - [pub2obu_loop] 发送消息: {'V': 0, 'RT': 1, 'Message Type': 3, 'Length': 0, 'SourceID': '', 'DestID': None, 'OP': 1, 'Topic': 12345, 'Payload': '000E000400000000000F00203659436135352B6C3535714535593250354C3263355A752B3559614635613635000D000400000000000C0010DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD0006000400000016', 'PayloadType': 2, 'PayloadLength': 160, 'EncodeMode': 1, 'SourceId': 'A12345', 'DestId': '津A12345'}
+[2025-05-08 21:52:57,598] [app.core_app.INFO] INFO - [core_sub2app] 收到已解析消息 (count 4), mid: 22
+[2025-05-08 21:52:57,598] [app.core_app.INFO] INFO - core_sub2app: 处理 notify
+[2025-05-08 21:52:57,599] [app.core_app.INFO] INFO - core_sub2app: notify, topic '12345', 放入 pub2obu_queue
+[2025-05-08 21:52:57,599] [app.pub2obu.INFO] INFO - [pub2obu_loop] 发送消息: {'V': 0, 'RT': 1, 'Message Type': 3, 'Length': 0, 'SourceID': '', 'DestID': None, 'OP': 1, 'Topic': 12345, 'Payload': '000E000400000000000F00203659436135352B6C3535714535593250354C3263355A752B3559614635613635000D000400000000000C0010DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD0006000400000016', 'PayloadType': 2, 'PayloadLength': 160, 'EncodeMode': 1, 'SourceId': 'A12345', 'DestId': '津A12345'}
+[2025-05-08 22:18:03,359] [app.main.INFO] INFO - 执行定期旧文件清理...
+[2025-05-08 23:18:03,371] [app.main.INFO] INFO - 执行定期旧文件清理...
+[2025-05-09 00:18:03,372] [app.main.INFO] INFO - 执行定期旧文件清理...
+[2025-05-09 00:52:26,821] [app.main.INFO] INFO - 
+检测到 KeyboardInterrupt，开始关闭程序...
+[2025-05-09 00:52:26,821] [app.main.INFO] INFO - 开始关闭程序资源...
+[2025-05-09 00:52:26,821] [app.main.INFO] INFO - 正在关闭日志系统...
+[2025-05-09 09:55:18,385] [app.core_app.INFO] INFO - [core_sub2app] 线程启动，等待消息...
+[2025-05-09 09:55:18,385] [app.main.INFO] INFO - 线程 'CoreSubToAppThread' 已启动。
+[2025-05-09 09:55:18,386] [app.core_obu.INFO] INFO - [core_sub2obu] 线程启动，等待来自 OBU 的消息...
+[2025-05-09 09:55:18,386] [app.main.INFO] INFO - 线程 'CoreSubToOBUThread' 已启动。
+[2025-05-09 09:55:18,387] [app.main.INFO] INFO - [Main] 所有核心线程已启动，应用程序运行中...
+[2025-05-09 09:55:29,282] [app.core_app.INFO] INFO - [core_sub2app] 收到已解析消息 (count 0), mid: 22
+[2025-05-09 09:55:29,282] [app.core_app.INFO] INFO - core_sub2app: 处理 notify
+[2025-05-09 09:55:29,283] [app.core_app.INFO] INFO - core_sub2app: notify, topic '12345', 放入 pub2obu_queue
+[2025-05-09 09:55:29,284] [app.pub2obu.INFO] INFO - [pub2obu_loop] 发送消息: {'V': 0, 'RT': 1, 'Message Type': 3, 'Length': 0, 'SourceID': '', 'DestID': None, 'OP': 1, 'Topic': 12345, 'Payload': '000E000400000000000F00203659436135352B6C3535714535593250354C3263355A752B3559614635613635000D000400000000000C0010DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD0006000400000016', 'PayloadType': 2, 'PayloadLength': 160, 'EncodeMode': 1, 'SourceId': 'A12345', 'DestId': '津A12345'}
+[2025-05-09 09:55:45,251] [app.core_app.INFO] INFO - [core_sub2app] 收到已解析消息 (count 1), mid: 22
+[2025-05-09 09:55:45,252] [app.core_app.INFO] INFO - core_sub2app: 处理 notify
+[2025-05-09 09:55:45,253] [app.core_app.INFO] INFO - core_sub2app: notify, topic '12345', 放入 pub2obu_queue
+[2025-05-09 09:55:45,253] [app.pub2obu.INFO] INFO - [pub2obu_loop] 发送消息: {'V': 0, 'RT': 1, 'Message Type': 3, 'Length': 0, 'SourceID': '', 'DestID': None, 'OP': 1, 'Topic': 12345, 'Payload': '000E000400000000000F00203659436135352B6C3535714535593250354C3263355A752B3559614635613635000D000400000000000C0010DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD0006000400000016', 'PayloadType': 2, 'PayloadLength': 160, 'EncodeMode': 1, 'SourceId': 'A12345', 'DestId': '津A12345'}
+[2025-05-09 10:03:22,359] [app.core_app.INFO] INFO - [core_sub2app] 收到已解析消息 (count 2), mid: 22
+[2025-05-09 10:03:22,359] [app.core_app.INFO] INFO - core_sub2app: 处理 notify
+[2025-05-09 10:03:22,360] [app.core_app.INFO] INFO - core_sub2app: notify, topic '12345', 放入 pub2obu_queue
+[2025-05-09 10:03:22,360] [app.pub2obu.INFO] INFO - [pub2obu_loop] 发送消息: {'V': 0, 'RT': 1, 'Message Type': 3, 'Length': 0, 'SourceID': '', 'DestID': None, 'OP': 1, 'Topic': 12345, 'Payload': '000E000400000000000F00203659436135352B6C3535714535593250354C3263355A752B3559614635613635000D000400000000000C0010DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD0006000400000016', 'PayloadType': 2, 'PayloadLength': 160, 'EncodeMode': 1, 'SourceId': 'A12345', 'DestId': '津A12345'}
+[2025-05-09 10:03:43,359] [app.core_app.INFO] INFO - [core_sub2app] 收到已解析消息 (count 3), mid: 22
+[2025-05-09 10:03:43,359] [app.core_app.INFO] INFO - core_sub2app: 处理 notify
+[2025-05-09 10:03:43,361] [app.core_app.INFO] INFO - core_sub2app: notify, topic '12345', 放入 pub2obu_queue
+[2025-05-09 10:03:43,362] [app.pub2obu.INFO] INFO - [pub2obu_loop] 发送消息: {'V': 0, 'RT': 1, 'Message Type': 3, 'Length': 0, 'SourceID': '', 'DestID': None, 'OP': 1, 'Topic': 12345, 'Payload': '000E000400000000000F00203659436135352B6C3535714535593250354C3263355A752B3559614635613635000D000400000000000C0010DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD0006000400000016', 'PayloadType': 2, 'PayloadLength': 160, 'EncodeMode': 1, 'SourceId': 'A12345', 'DestId': '津A12345'}
+[2025-05-09 10:04:27,724] [app.core_app.INFO] INFO - [core_sub2app] 收到已解析消息 (count 4), mid: 22
+[2025-05-09 10:04:27,724] [app.core_app.INFO] INFO - core_sub2app: 处理 notify
+[2025-05-09 10:04:27,726] [app.core_app.INFO] INFO - core_sub2app: notify, topic '12345', 放入 pub2obu_queue
+[2025-05-09 10:04:27,726] [app.pub2obu.INFO] INFO - [pub2obu_loop] 发送消息: {'V': 0, 'RT': 1, 'Message Type': 3, 'Length': 0, 'SourceID': '', 'DestID': None, 'OP': 1, 'Topic': 12345, 'Payload': '000E000400000000000F00203659436135352B6C3535714535593250354C3263355A752B3559614635613635000D000400000000000C0010DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD0006000400000016', 'PayloadType': 2, 'PayloadLength': 160, 'EncodeMode': 1, 'SourceId': 'A12345', 'DestId': '津A12345'}
+[2025-05-09 10:04:46,208] [app.core_app.INFO] INFO - [core_sub2app] 收到已解析消息 (count 5), mid: 22
+[2025-05-09 10:04:46,208] [app.core_app.INFO] INFO - core_sub2app: 处理 notify
+[2025-05-09 10:04:46,210] [app.core_app.INFO] INFO - core_sub2app: notify, topic '12345', 放入 pub2obu_queue
+[2025-05-09 10:04:46,210] [app.pub2obu.INFO] INFO - [pub2obu_loop] 发送消息: {'V': 0, 'RT': 1, 'Message Type': 3, 'Length': 0, 'SourceID': '', 'DestID': None, 'OP': 1, 'Topic': 12345, 'Payload': '000E000400000000000F00203659436135352B6C3535714535593250354C3263355A752B3559614635613635000D000400000000000C0010DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD0006000400000016', 'PayloadType': 2, 'PayloadLength': 160, 'EncodeMode': 1, 'SourceId': 'A12345', 'DestId': '津A12345'}
+[2025-05-09 10:04:52,922] [app.core_app.INFO] INFO - [core_sub2app] 收到已解析消息 (count 6), mid: 22
+[2025-05-09 10:04:52,922] [app.core_app.INFO] INFO - core_sub2app: 处理 notify
+[2025-05-09 10:04:52,923] [app.core_app.INFO] INFO - core_sub2app: notify, topic '12345', 放入 pub2obu_queue
+[2025-05-09 10:04:52,924] [app.pub2obu.INFO] INFO - [pub2obu_loop] 发送消息: {'V': 0, 'RT': 1, 'Message Type': 3, 'Length': 0, 'SourceID': '', 'DestID': None, 'OP': 1, 'Topic': 12345, 'Payload': '000E000400000000000F00203659436135352B6C3535714535593250354C3263355A752B3559614635613635000D000400000000000C0010DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD0006000400000016', 'PayloadType': 2, 'PayloadLength': 160, 'EncodeMode': 1, 'SourceId': 'A12345', 'DestId': '津A12345'}
+[2025-05-09 10:04:53,172] [app.core_app.INFO] INFO - [core_sub2app] 收到已解析消息 (count 7), mid: 22
+[2025-05-09 10:04:53,172] [app.core_app.INFO] INFO - core_sub2app: 处理 notify
+[2025-05-09 10:04:53,172] [app.core_app.INFO] INFO - core_sub2app: notify, topic '12345', 放入 pub2obu_queue
+[2025-05-09 10:04:53,172] [app.pub2obu.INFO] INFO - [pub2obu_loop] 发送消息: {'V': 0, 'RT': 1, 'Message Type': 3, 'Length': 0, 'SourceID': '', 'DestID': None, 'OP': 1, 'Topic': 12345, 'Payload': '000E000400000000000F00203659436135352B6C3535714535593250354C3263355A752B3559614635613635000D000400000000000C0010DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD0006000400000016', 'PayloadType': 2, 'PayloadLength': 160, 'EncodeMode': 1, 'SourceId': 'A12345', 'DestId': '津A12345'}
+[2025-05-09 10:04:53,328] [app.core_app.INFO] INFO - [core_sub2app] 收到已解析消息 (count 8), mid: 22
+[2025-05-09 10:04:53,328] [app.core_app.INFO] INFO - core_sub2app: 处理 notify
+[2025-05-09 10:04:53,330] [app.core_app.INFO] INFO - core_sub2app: notify, topic '12345', 放入 pub2obu_queue
+[2025-05-09 10:04:53,331] [app.pub2obu.INFO] INFO - [pub2obu_loop] 发送消息: {'V': 0, 'RT': 1, 'Message Type': 3, 'Length': 0, 'SourceID': '', 'DestID': None, 'OP': 1, 'Topic': 12345, 'Payload': '000E000400000000000F00203659436135352B6C3535714535593250354C3263355A752B3559614635613635000D000400000000000C0010DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD0006000400000016', 'PayloadType': 2, 'PayloadLength': 160, 'EncodeMode': 1, 'SourceId': 'A12345', 'DestId': '津A12345'}
+[2025-05-09 10:06:55,164] [app.core_app.INFO] INFO - [core_sub2app] 收到已解析消息 (count 9), mid: 22
+[2025-05-09 10:06:55,164] [app.core_app.INFO] INFO - core_sub2app: 处理 notify
+[2025-05-09 10:06:55,165] [app.core_app.INFO] INFO - core_sub2app: notify, topic '12345', 放入 pub2obu_queue
+[2025-05-09 10:06:55,166] [app.pub2obu.INFO] INFO - [pub2obu_loop] 发送消息: {'V': 0, 'RT': 1, 'Message Type': 3, 'Length': 0, 'SourceID': '', 'DestID': None, 'OP': 1, 'Topic': 12345, 'Payload': '000E000400000000000F00203659436135352B6C3535714535593250354C3263355A752B3559614635613635000D000400000000000C0010DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD0006000400000016', 'PayloadType': 2, 'PayloadLength': 160, 'EncodeMode': 1, 'SourceId': 'A12345', 'DestId': '津A12345'}
+[2025-05-09 10:08:08,409] [app.core_app.INFO] INFO - [core_sub2app] 收到已解析消息 (count 10), mid: 22
+[2025-05-09 10:08:08,409] [app.core_app.INFO] INFO - core_sub2app: 处理 notify
+[2025-05-09 10:08:08,411] [app.core_app.INFO] INFO - core_sub2app: notify, topic '12345', 放入 pub2obu_queue
+[2025-05-09 10:08:08,411] [app.pub2obu.INFO] INFO - [pub2obu_loop] 发送消息: {'V': 0, 'RT': 1, 'Message Type': 3, 'Length': 0, 'SourceID': '', 'DestID': None, 'OP': 1, 'Topic': 12345, 'Payload': '000E000400000000000F00203659436135352B6C3535714535593250354C3263355A752B3559614635613635000D000400000000000C0010DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD0006000400000016', 'PayloadType': 2, 'PayloadLength': 160, 'EncodeMode': 1, 'SourceId': 'A12345', 'DestId': '津A12345'}
+[2025-05-09 10:10:42,927] [app.core_app.INFO] INFO - [core_sub2app] 收到已解析消息 (count 11), mid: 22
+[2025-05-09 10:10:42,927] [app.core_app.INFO] INFO - core_sub2app: 处理 notify
+[2025-05-09 10:10:42,928] [app.core_app.INFO] INFO - core_sub2app: notify, topic '12345', 放入 pub2obu_queue
+[2025-05-09 10:10:42,928] [app.pub2obu.INFO] INFO - [pub2obu_loop] 发送消息: {'V': 0, 'RT': 1, 'Message Type': 3, 'Length': 0, 'SourceID': '', 'DestID': None, 'OP': 1, 'Topic': 12345, 'Payload': '000E000400000000000F00203659436135352B6C3535714535593250354C3263355A752B3559614635613635000D000400000000000C0010DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD0006000400000016', 'PayloadType': 2, 'PayloadLength': 160, 'EncodeMode': 1, 'SourceId': '京A12345', 'DestId': '津A12345'}
+[2025-05-09 10:17:33,795] [app.core_app.INFO] INFO - [core_sub2app] 收到已解析消息 (count 12), mid: 22
+[2025-05-09 10:17:33,795] [app.core_app.INFO] INFO - core_sub2app: 处理 notify
+[2025-05-09 10:17:33,797] [app.core_app.INFO] INFO - core_sub2app: notify, topic '12345', 放入 pub2obu_queue
+[2025-05-09 10:17:33,797] [app.pub2obu.INFO] INFO - [pub2obu_loop] 发送消息: {'V': 0, 'RT': 1, 'Message Type': 3, 'Length': 0, 'SourceID': '', 'DestID': None, 'OP': 1, 'Topic': 12345, 'Payload': '000E000400000000000F00203659436135352B6C3535714535593250354C3263355A752B3559614635613635000D000400000000000C0010DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD0006000400000016', 'PayloadType': 2, 'PayloadLength': 160, 'EncodeMode': 1, 'SourceId': '京A12345', 'DestId': '津A12345'}
+[2025-05-09 10:22:54,215] [app.core_app.INFO] INFO - [core_sub2app] 收到已解析消息 (count 13), mid: 22
+[2025-05-09 10:22:54,215] [app.core_app.INFO] INFO - core_sub2app: 处理 notify
+[2025-05-09 10:22:54,216] [app.core_app.INFO] INFO - core_sub2app: notify, topic '12345', 放入 pub2obu_queue
+[2025-05-09 10:22:54,217] [app.core_app.INFO] INFO - [core_sub2app] 收到已解析消息 (count 14), mid: 22
+[2025-05-09 10:22:54,217] [app.core_app.INFO] INFO - core_sub2app: 处理 notify
+[2025-05-09 10:22:54,217] [app.pub2obu.INFO] INFO - [pub2obu_loop] 发送消息: {'V': 0, 'RT': 1, 'Message Type': 3, 'Length': 0, 'SourceID': '', 'DestID': None, 'OP': 1, 'Topic': 12345, 'Payload': '000E000400000000000F00203659436135352B6C3535714535593250354C3263355A752B3559614635613635000D000400000000000C0010DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD0006000400000016', 'PayloadType': 2, 'PayloadLength': 160, 'EncodeMode': 1, 'SourceId': '京A12345', 'DestId': '津A12345'}
+[2025-05-09 10:22:54,218] [app.core_app.INFO] INFO - core_sub2app: notify, topic '12345', 放入 pub2obu_queue
+[2025-05-09 10:22:54,219] [app.pub2obu.INFO] INFO - [pub2obu_loop] 发送消息: {'V': 0, 'RT': 1, 'Message Type': 3, 'Length': 0, 'SourceID': '', 'DestID': None, 'OP': 1, 'Topic': 12345, 'Payload': '000E000400000000000F00203659436135352B6C3535714535593250354C3263355A752B3559614635613635000D000400000000000C0010DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD0006000400000016', 'PayloadType': 2, 'PayloadLength': 160, 'EncodeMode': 1, 'SourceId': '京A12345', 'DestId': '津A12345'}
+[2025-05-09 10:25:01,507] [app.core_app.INFO] INFO - [core_sub2app] 收到已解析消息 (count 15), mid: 22
+[2025-05-09 10:25:01,507] [app.core_app.INFO] INFO - core_sub2app: 处理 notify
+[2025-05-09 10:25:01,508] [app.core_app.INFO] INFO - core_sub2app: notify, topic '12345', 放入 pub2obu_queue
+[2025-05-09 10:25:01,508] [app.pub2obu.INFO] INFO - [pub2obu_loop] 发送消息: {'V': 0, 'RT': 1, 'Message Type': 3, 'Length': 0, 'SourceID': '', 'DestID': None, 'OP': 1, 'Topic': 12345, 'Payload': '000E000400000000000F00203659436135352B6C3535714535593250354C3263355A752B3559614635613635000D000400000000000C0010DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD0006000400000016', 'PayloadType': 2, 'PayloadLength': 160, 'EncodeMode': 1, 'SourceId': '京A12345', 'DestId': '津A12345'}
+[2025-05-09 10:28:20,701] [app.core_app.INFO] INFO - [core_sub2app] 收到已解析消息 (count 16), mid: 22
+[2025-05-09 10:28:20,701] [app.core_app.INFO] INFO - core_sub2app: 处理 notify
+[2025-05-09 10:28:20,702] [app.core_app.INFO] INFO - core_sub2app: notify, topic '12345', 放入 pub2obu_queue
+[2025-05-09 10:28:20,703] [app.pub2obu.INFO] INFO - [pub2obu_loop] 发送消息: {'V': 0, 'RT': 1, 'Message Type': 3, 'Length': 0, 'SourceID': '', 'DestID': None, 'OP': 1, 'Topic': 12345, 'Payload': '000E000400000000000F00203659436135352B6C3535714535593250354C3263355A752B3559614635613635000D000400000000000C0010DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD0006000400000016', 'PayloadType': 2, 'PayloadLength': 160, 'EncodeMode': 1, 'SourceId': '京A12345', 'DestId': '津A12345'}
+[2025-05-09 10:30:16,310] [app.core_app.INFO] INFO - [core_sub2app] 收到已解析消息 (count 17), mid: 22
+[2025-05-09 10:30:16,310] [app.core_app.INFO] INFO - core_sub2app: 处理 notify
+[2025-05-09 10:30:16,312] [app.core_app.INFO] INFO - core_sub2app: notify, topic '12345', 放入 pub2obu_queue
+[2025-05-09 10:30:16,313] [app.pub2obu.INFO] INFO - [pub2obu_loop] 发送消息: {'V': 0, 'RT': 1, 'Message Type': 3, 'Length': 0, 'SourceID': '', 'DestID': None, 'OP': 1, 'Topic': 12345, 'Payload': '000E000400000000000F00203659436135352B6C3535714535593250354C3263355A752B3559614635613635000D000400000000000C0010DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD0006000400000016', 'PayloadType': 2, 'PayloadLength': 160, 'EncodeMode': 1, 'SourceId': '京A12345', 'DestId': '津A12345'}
+[2025-05-09 10:32:02,805] [app.core_app.INFO] INFO - [core_sub2app] 收到已解析消息 (count 18), mid: 22
+[2025-05-09 10:32:02,805] [app.core_app.INFO] INFO - core_sub2app: 处理 notify
+[2025-05-09 10:32:02,807] [app.core_app.INFO] INFO - core_sub2app: notify, topic '12345', 放入 pub2obu_queue
+[2025-05-09 10:32:02,808] [app.pub2obu.INFO] INFO - [pub2obu_loop] 发送消息: {'V': 0, 'RT': 1, 'Message Type': 3, 'Length': 0, 'SourceID': '', 'DestID': None, 'OP': 1, 'Topic': 12345, 'Payload': '000E000400000000000F00203659436135352B6C3535714535593250354C3263355A752B3559614635613635000D000400000000000C0010DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD0006000400000016', 'PayloadType': 2, 'PayloadLength': 160, 'EncodeMode': 1, 'SourceId': '京A12345', 'DestId': '津A12345'}
+[2025-05-09 10:32:32,304] [app.core_app.INFO] INFO - [core_sub2app] 收到已解析消息 (count 19), mid: 22
+[2025-05-09 10:32:32,304] [app.core_app.INFO] INFO - core_sub2app: 处理 notify
+[2025-05-09 10:32:32,305] [app.core_app.INFO] INFO - core_sub2app: notify, topic '12345', 放入 pub2obu_queue
+[2025-05-09 10:32:32,306] [app.pub2obu.INFO] INFO - [pub2obu_loop] 发送消息: {'V': 0, 'RT': 1, 'Message Type': 3, 'Length': 0, 'SourceID': '', 'DestID': None, 'OP': 1, 'Topic': 12345, 'Payload': '000E000400000000000F00203659436135352B6C3535714535593250354C3263355A752B3559614635613635000D000400000000000C0010DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD0006000400000016', 'PayloadType': 2, 'PayloadLength': 160, 'EncodeMode': 1, 'SourceId': '京A12345', 'DestId': '津A12345'}
+[2025-05-09 10:37:30,092] [app.core_app.INFO] INFO - [core_sub2app] 收到已解析消息 (count 20), mid: 22
+[2025-05-09 10:37:30,092] [app.core_app.INFO] INFO - core_sub2app: 处理 notify
+[2025-05-09 10:37:30,094] [app.core_app.INFO] INFO - core_sub2app: notify, topic '12345', 放入 pub2obu_queue
+[2025-05-09 10:37:30,094] [app.pub2obu.INFO] INFO - [pub2obu_loop] 发送消息: {'V': 0, 'RT': 1, 'Message Type': 3, 'Length': 0, 'SourceID': '', 'DestID': None, 'OP': 1, 'Topic': 12345, 'Payload': '000E000400000000000F00203659436135352B6C3535714535593250354C3263355A752B3559614635613635000D000400000000000C0010DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD0006000400000016', 'PayloadType': 2, 'PayloadLength': 160, 'EncodeMode': 1, 'SourceId': '京A12345', 'DestId': '津A12345'}
+[2025-05-09 10:45:15,873] [app.main.INFO] INFO - 
+检测到 KeyboardInterrupt，开始关闭程序...
+[2025-05-09 10:45:15,874] [app.main.INFO] INFO - 开始关闭程序资源...
+[2025-05-09 10:45:15,874] [app.main.INFO] INFO - 正在关闭日志系统...
+[2025-05-09 10:45:16,958] [app.core_app.INFO] INFO - [core_sub2app] 线程启动，等待消息...
+[2025-05-09 10:45:16,958] [app.main.INFO] INFO - 线程 'CoreSubToAppThread' 已启动。
+[2025-05-09 10:45:16,959] [app.core_obu.INFO] INFO - [core_sub2obu] 线程启动，等待来自 OBU 的消息...
+[2025-05-09 10:45:16,960] [app.main.INFO] INFO - 线程 'CoreSubToOBUThread' 已启动。
+[2025-05-09 10:45:16,960] [app.main.INFO] INFO - [Main] 所有核心线程已启动，应用程序运行中...

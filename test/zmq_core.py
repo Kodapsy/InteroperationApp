@@ -140,233 +140,231 @@ def core_sub2app():
                 logger_core_app.info(f"[core_sub2app] 收到已解析消息 (count {count}), mid: {message.get('mid')}")
                 count += 1
                 
-                mid = message["mid"]
+                mid = message.get("mid",0)
                 appid = message.get("app_id", "AppIdNotProvided") # Use .get for safety
-
-                match mid:
-                    case config.appReg:
-                        logger_core_app.info(f"core_sub2app: 处理 appReg from appid: {appid}")
-                        tid = message["tid"]
-                        data = message["msg"]
-                        msg_response = { "tid" : tid } # Renamed to avoid conflict
-                        act = data["act"]
-                        logger_core_app.debug(f"core_sub2app: appReg action: {act}")
-                        if act == config.appActLogin:
-                            flag = caps_instance.putCapability(appid, data["capId"], data["capVersion"], data["capConfig"])
-                            msg_response["result"] = config.regack if flag else config.regnack
-                        elif act == config.appActLogout: # Use elif for mutually exclusive conditions
-                            flag = caps_instance.deleteCapability(appid, data["capId"], data["capVersion"], data["capConfig"])
-                            msg_response["result"] = config.delack if flag else config.delnack
-                        elif act == config.appActopen:
-                            flag = caps_instance.updateBroadcast(appid, data["capId"], data["capVersion"], data["capConfig"], True)
-                            msg_response["result"] = config.openack if flag else config.opennack
-                        elif act == config.appActclose:
-                            flag = caps_instance.updateBroadcast(appid, data["capId"], data["capVersion"], data["capConfig"], False)
-                            msg_response["result"] = config.closeack if flag else config.closenack
-                        else:
-                            logger_core_app.warning(f"core_sub2app: appReg 未知 action: {act}")
-                            msg_response["result"] = "NACK_UNKNOWN_ACTION"
-                        logger_core_app.info(f"core_sub2app: appReg 发送响应: {msg_response}")
-                        pub2app_socket.send_string(json.dumps(msg_response, ensure_ascii=False)) 
+                if mid == config.appReg:
+                    logger_core_app.info(f"core_sub2app: 处理 appReg from appid: {appid}")
+                    tid = message["tid"]
+                    data = message["msg"]
+                    msg_response = { "tid" : tid } # Renamed to avoid conflict
+                    act = data["act"]
+                    logger_core_app.debug(f"core_sub2app: appReg action: {act}")
+                    if act == config.appActLogin:
+                        flag = caps_instance.putCapability(appid, data["capId"], data["capVersion"], data["capConfig"])
+                        msg_response["result"] = config.regack if flag else config.regnack
+                    elif act == config.appActLogout: # Use elif for mutually exclusive conditions
+                        flag = caps_instance.deleteCapability(appid, data["capId"], data["capVersion"], data["capConfig"])
+                        msg_response["result"] = config.delack if flag else config.delnack
+                    elif act == config.appActopen:
+                        flag = caps_instance.updateBroadcast(appid, data["capId"], data["capVersion"], data["capConfig"], True)
+                        msg_response["result"] = config.openack if flag else config.opennack
+                    elif act == config.appActclose:
+                        flag = caps_instance.updateBroadcast(appid, data["capId"], data["capVersion"], data["capConfig"], False)
+                        msg_response["result"] = config.closeack if flag else config.closenack
+                    else:
+                        logger_core_app.warning(f"core_sub2app: appReg 未知 action: {act}")
+                        msg_response["result"] = "NACK_UNKNOWN_ACTION"
+                    logger_core_app.info(f"core_sub2app: appReg 发送响应: {msg_response}")
+                    pub2app_socket.send_string(json.dumps(msg_response, ensure_ascii=False)) 
+                
+                elif mid == config.boardCastPub:
+                    logger_core_app.info(f"core_sub2app: 处理 boardCastPub")
+                    data = message["msg"]
+                    sendMsg = config.pubMsg.copy()
+                    sendMsg["RT"] = 0
+                    sendMsg["SourceId"] = data["oid"]
+                    sendMsg["DestId"] = ""
+                    sendMsg["OP"] = 0
+                    sendMsg["Topic"] = data["topic"]
+                    sendMsg["PayloadType"] = config.type_common
+                    sendMsg["EncodeMode"] = config.encodeASN
+                    TLVmsg = {
+                        "CommonDataType":data["coopMapType"],
+                        "CommonData":data["coopMap"],
+                        "Mid": config.boardCastPub # Mid for TLV content
+                    }
+                    TLVm = module.TLV.TLVEncoderDecoder.encode(TLVmsg)
+                    sendMsg["Payload"] = TLVm
+                    byte_TLV = TLVm.encode("utf-8") # Should be TLVm.encode if TLVm is string, or direct bytes
+                    sendMsg["PayloadLength"] = len(byte_TLV)
+                    logger_core_app.info(f"core_sub2app: boardCastPub, topic '{data['topic']}', 放入 pub2obu_queue")
+                    pub2obu_queue.put(sendMsg)
                     
-                    case config.boardCastPub:
-                        logger_core_app.info(f"core_sub2app: 处理 boardCastPub")
-                        data = message["msg"]
-                        sendMsg = config.pubMsg.copy()
-                        sendMsg["RT"] = 0
-                        sendMsg["SourceId"] = data["oid"]
-                        sendMsg["DestId"] = ""
-                        sendMsg["OP"] = 0
-                        sendMsg["Topic"] = data["topic"]
-                        sendMsg["PayloadType"] = config.type_common
-                        sendMsg["EncodeMode"] = config.encodeASN
-                        TLVmsg = {
-                            "CommonDataType":data["coopMapType"],
-                            "CommonData":data["coopMap"],
-                            "Mid": config.boardCastPub # Mid for TLV content
-                        }
-                        TLVm = module.TLV.TLVEncoderDecoder.encode(TLVmsg)
-                        sendMsg["Payload"] = TLVm
-                        byte_TLV = TLVm.encode("utf-8") # Should be TLVm.encode if TLVm is string, or direct bytes
-                        sendMsg["PayloadLength"] = len(byte_TLV)
-                        logger_core_app.info(f"core_sub2app: boardCastPub, topic '{data['topic']}', 放入 pub2obu_queue")
-                        pub2obu_queue.put(sendMsg)
-                        
-                    case config.boardCastSub:
-                        logger_core_app.info(f"core_sub2app: 处理 boardCastSub")
-                        data = message["msg"]
-                        smFlag = SM_instance.update_state(message["mid"], data["context"])
-                        if smFlag:
-                            logger_core_app.debug(f"core_sub2app: boardCastSub 会话状态更新成功: {SM_instance.sessions}")
-                        else:
-                            logger_core_app.warning(f"core_sub2app: boardCastSub 会话状态更新失败")
-                        sendMsg = config.subMsg.copy()
-                        sendMsg["RT"] = 0
-                        sendMsg["SourceId"] = data["oid"]
-                        sendMsg["DestId"] = ""
-                        sendMsg["OP"] = 0
-                        sendMsg["Topic"] = data["topic"]
-                        sendMsg["PayloadType"] = config.type_common
-                        sendMsg["EncodeMode"] = config.encodeASN
-                        context_id = data["context"]
-                        logger_core_app.debug(f"core_sub2app: boardCastSub 原始 context_id 长度: {len(context_id)}")
-                        if len(context_id) > 64:
-                            logger_core_app.warning(f"core_sub2app: ContextId 超长，已截断: 原始 {len(context_id)} → 64")
-                            context_id = context_id[:64]
-                        TLVmsg = {
-                            "CommonDataType":data["coopMapType"],
-                            "CommonData":data["coopMap"],
-                            "BearFlag":1 if data["bearCap"] == 1 else 0,
-                            "ContextId":context_id,
-                            "Mid": config.boardCastSub # Mid for TLV content
-                        }
-                        TLVm = module.TLV.TLVEncoderDecoder.encode(TLVmsg)
-                        sendMsg["Payload"] = TLVm
-                        byte_TLV = TLVm.encode("utf-8")
-                        sendMsg["PayloadLength"] = len(byte_TLV)
-                        logger_core_app.info(f"core_sub2app: boardCastSub, topic '{data['topic']}', 放入 pub2obu_queue")
-                        pub2obu_queue.put(sendMsg)
+                elif mid == config.boardCastSub:
+                    logger_core_app.info(f"core_sub2app: 处理 boardCastSub")
+                    data = message["msg"]
+                    smFlag = SM_instance.update_state(message["mid"], data["context"])
+                    if smFlag:
+                        logger_core_app.debug(f"core_sub2app: boardCastSub 会话状态更新成功: {SM_instance.sessions}")
+                    else:
+                        logger_core_app.warning(f"core_sub2app: boardCastSub 会话状态更新失败")
+                    sendMsg = config.subMsg.copy()
+                    sendMsg["RT"] = 0
+                    sendMsg["SourceId"] = data["oid"]
+                    sendMsg["DestId"] = ""
+                    sendMsg["OP"] = 0
+                    sendMsg["Topic"] = data["topic"]
+                    sendMsg["PayloadType"] = config.type_common
+                    sendMsg["EncodeMode"] = config.encodeASN
+                    context_id = data["context"]
+                    logger_core_app.debug(f"core_sub2app: boardCastSub 原始 context_id 长度: {len(context_id)}")
+                    if len(context_id) > 64:
+                        logger_core_app.warning(f"core_sub2app: ContextId 超长，已截断: 原始 {len(context_id)} → 64")
+                        context_id = context_id[:64]
+                    TLVmsg = {
+                        "CommonDataType":data["coopMapType"],
+                        "CommonData":data["coopMap"],
+                        "BearFlag":1 if data["bearCap"] == 1 else 0,
+                        "ContextId":context_id,
+                        "Mid": config.boardCastSub # Mid for TLV content
+                    }
+                    TLVm = module.TLV.TLVEncoderDecoder.encode(TLVmsg)
+                    sendMsg["Payload"] = TLVm
+                    byte_TLV = TLVm.encode("utf-8")
+                    sendMsg["PayloadLength"] = len(byte_TLV)
+                    logger_core_app.info(f"core_sub2app: boardCastSub, topic '{data['topic']}', 放入 pub2obu_queue")
+                    pub2obu_queue.put(sendMsg)
+                
+                elif mid == config.boardCastSubNotify:
+                    logger_core_app.info(f"core_sub2app: 处理 boardCastSubNotify")
+                    data = message["msg"]
+                    smFlag = SM_instance.update_state(message["mid"], data["context"])
+                    if smFlag:
+                        logger_core_app.debug(f"core_sub2app: boardCastSubNotify 会话状态更新成功: {SM_instance.sessions}")
+                    else:
+                        logger_core_app.warning(f"core_sub2app: boardCastSubNotify 会话状态更新失败")
+                    sendMsg = config.pubMsg.copy()
+                    sendMsg["RT"] = 1
+                    sendMsg["SourceId"] = data["oid"]
+                    sendMsg["DestId"] = data["did"]
+                    sendMsg["OP"] = 0
+                    sendMsg["Topic"] = data["topic"]
+                    sendMsg["PayloadType"] = config.type_common
+                    sendMsg["EncodeMode"] = config.encodeASN
+                    TLVmsg = {
+                        "CommonDataType":data["coopMapType"],
+                        "CommonData":data["coopMap"],
+                        "BearFlag":1 if data["bearCap"] == 1 else 0,
+                        "ContextId":data["context"],
+                        "Mid":config.boardCastSub # Original code has boardCastSub, assuming intentional for TLV
+                    }
+                    TLVm = module.TLV.TLVEncoderDecoder.encode(TLVmsg)
+                    sendMsg["Payload"] = TLVm
+                    byte_TLV = TLVm.encode("utf-8")
+                    sendMsg["PayloadLength"] = len(byte_TLV)
+                    logger_core_app.info(f"core_sub2app: boardCastSubNotify, topic '{data['topic']}', 放入 pub2obu_queue")
+                    pub2obu_queue.put(sendMsg)
+                
+                elif mid == config.subScribe:
+                    logger_core_app.info(f"core_sub2app: 处理 subScribe")
+                    data = message["msg"]
+                    smFlag = SM_instance.update_state(message["mid"], data["context"], data["act"])
+                    if smFlag:
+                        logger_core_app.debug(f"core_sub2app: subScribe 会话状态更新成功: {SM_instance.sessions}")
+                    else:
+                        logger_core_app.warning(f"core_sub2app: subScribe 会话状态更新失败")
+                    sendMsg = config.subMsg.copy()
+                    sendMsg["RT"] = 1
+                    sendMsg["SourceId"] = data["oid"]
+                    sendMsg["DestId"] = data["did"]
+                    sendMsg["OP"] = data["act"]
+                    sendMsg["Topic"] = data["topic"]
+                    sendMsg["PayloadType"] = config.type_common
+                    sendMsg["EncodeMode"] = config.encodeASN
+                    TLVmsg = {
+                        "CommonDataType":data["coopMapType"],
+                        "CommonData":data["coopMap"],
+                        "BearFlag":2 if data["bearinfo"] == 1 else 0,
+                        "ContextId":data["context"],
+                        "Mid":config.subScribe # Mid for TLV content
+                    }
+                    TLVm = module.TLV.TLVEncoderDecoder.encode(TLVmsg)
+                    sendMsg["Payload"] = TLVm
+                    byte_TLV = TLVm.encode("utf-8")
+                    sendMsg["PayloadLength"] = len(byte_TLV)
+                    logger_core_app.info(f"core_sub2app: subScribe, topic '{data['topic']}', 放入 pub2obu_queue")
+                    pub2obu_queue.put(sendMsg)
                     
-                    case config.boardCastSubNotify:
-                        logger_core_app.info(f"core_sub2app: 处理 boardCastSubNotify")
-                        data = message["msg"]
-                        smFlag = SM_instance.update_state(message["mid"], data["context"])
-                        if smFlag:
-                            logger_core_app.debug(f"core_sub2app: boardCastSubNotify 会话状态更新成功: {SM_instance.sessions}")
-                        else:
-                            logger_core_app.warning(f"core_sub2app: boardCastSubNotify 会话状态更新失败")
-                        sendMsg = config.pubMsg.copy()
-                        sendMsg["RT"] = 1
-                        sendMsg["SourceId"] = data["oid"]
-                        sendMsg["DestId"] = data["did"]
-                        sendMsg["OP"] = 0
-                        sendMsg["Topic"] = data["topic"]
-                        sendMsg["PayloadType"] = config.type_common
-                        sendMsg["EncodeMode"] = config.encodeASN
-                        TLVmsg = {
-                            "CommonDataType":data["coopMapType"],
-                            "CommonData":data["coopMap"],
-                            "BearFlag":1 if data["bearCap"] == 1 else 0,
-                            "ContextId":data["context"],
-                            "Mid":config.boardCastSub # Original code has boardCastSub, assuming intentional for TLV
-                        }
-                        TLVm = module.TLV.TLVEncoderDecoder.encode(TLVmsg)
-                        sendMsg["Payload"] = TLVm
-                        byte_TLV = TLVm.encode("utf-8")
-                        sendMsg["PayloadLength"] = len(byte_TLV)
-                        logger_core_app.info(f"core_sub2app: boardCastSubNotify, topic '{data['topic']}', 放入 pub2obu_queue")
-                        pub2obu_queue.put(sendMsg)
+                elif mid == config.notify:
+                    logger_core_app.info(f"core_sub2app: 处理 notify")
+                    data = message["msg"]
+                    smFlag = SM_instance.update_state(message["mid"], data["context"], data["act"])
+                    if smFlag:
+                        logger_core_app.debug(f"core_sub2app: notify 会话状态更新成功: {SM_instance.sessions}")
+                    else:
+                        logger_core_app.warning(f"core_sub2app: notify 会话状态更新失败")
+                    sendMsg = config.pubMsg.copy()
+                    sendMsg["RT"] = 1
+                    sendMsg["SourceId"] = data["oid"]
+                    sendMsg["DestId"] = data["did"]
+                    sendMsg["OP"] = data["act"]
+                    sendMsg["Topic"] = data["topic"]
+                    sendMsg["PayloadType"] = config.type_common
+                    sendMsg["EncodeMode"] = config.encodeASN
+                    TLVmsg = {
+                        "CommonDataType":data["coopMapType"],
+                        "CommonData":data["coopMap"],
+                        "BearFlag":1 if data["bearCap"] == 1 else 0,
+                        "ContextId":data["context"],
+                        "Mid":config.notify # Mid for TLV content
+                    }
+                    TLVm = module.TLV.TLVEncoderDecoder.encode(TLVmsg)
+                    sendMsg["Payload"] = TLVm
+                    byte_TLV = TLVm.encode("utf-8")
+                    sendMsg["PayloadLength"] = len(byte_TLV)
+                    logger_core_app.info(f"core_sub2app: notify, topic '{data['topic']}', 放入 pub2obu_queue")
+                    pub2obu_queue.put(sendMsg)
                     
-                    case config.subScribe:
-                        logger_core_app.info(f"core_sub2app: 处理 subScribe")
-                        data = message["msg"]
-                        smFlag = SM_instance.update_state(message["mid"], data["context"], data["act"])
-                        if smFlag:
-                            logger_core_app.debug(f"core_sub2app: subScribe 会话状态更新成功: {SM_instance.sessions}")
-                        else:
-                            logger_core_app.warning(f"core_sub2app: subScribe 会话状态更新失败")
-                        sendMsg = config.subMsg.copy()
-                        sendMsg["RT"] = 1
-                        sendMsg["SourceId"] = data["oid"]
-                        sendMsg["DestId"] = data["did"]
-                        sendMsg["OP"] = data["act"]
-                        sendMsg["Topic"] = data["topic"]
-                        sendMsg["PayloadType"] = config.type_common
-                        sendMsg["EncodeMode"] = config.encodeASN
-                        TLVmsg = {
-                            "CommonDataType":data["coopMapType"],
-                            "CommonData":data["coopMap"],
-                            "BearFlag":2 if data["bearinfo"] == 1 else 0,
-                            "ContextId":data["context"],
-                            "Mid":config.subScribe # Mid for TLV content
-                        }
-                        TLVm = module.TLV.TLVEncoderDecoder.encode(TLVmsg)
-                        sendMsg["Payload"] = TLVm
-                        byte_TLV = TLVm.encode("utf-8")
-                        sendMsg["PayloadLength"] = len(byte_TLV)
-                        logger_core_app.info(f"core_sub2app: subScribe, topic '{data['topic']}', 放入 pub2obu_queue")
-                        pub2obu_queue.put(sendMsg)
-                        
-                    case config.notify:
-                        logger_core_app.info(f"core_sub2app: 处理 notify")
-                        data = message["msg"]
-                        smFlag = SM_instance.update_state(message["mid"], data["context"], data["act"])
-                        if smFlag:
-                            logger_core_app.debug(f"core_sub2app: notify 会话状态更新成功: {SM_instance.sessions}")
-                        else:
-                            logger_core_app.warning(f"core_sub2app: notify 会话状态更新失败")
-                        sendMsg = config.pubMsg.copy()
-                        sendMsg["RT"] = 1
-                        sendMsg["SourceId"] = data["oid"]
-                        sendMsg["DestId"] = data["did"]
-                        sendMsg["OP"] = data["act"]
-                        sendMsg["Topic"] = data["topic"]
-                        sendMsg["PayloadType"] = config.type_common
-                        sendMsg["EncodeMode"] = config.encodeASN
-                        TLVmsg = {
-                            "CommonDataType":data["coopMapType"],
-                            "CommonData":data["coopMap"],
-                            "BearFlag":1 if data["bearCap"] == 1 else 0,
-                            "ContextId":data["context"],
-                            "Mid":config.notify # Mid for TLV content
-                        }
-                        TLVm = module.TLV.TLVEncoderDecoder.encode(TLVmsg)
-                        sendMsg["Payload"] = TLVm
-                        byte_TLV = TLVm.encode("utf-8")
-                        sendMsg["PayloadLength"] = len(byte_TLV)
-                        logger_core_app.info(f"core_sub2app: notify, topic '{data['topic']}', 放入 pub2obu_queue")
-                        pub2obu_queue.put(sendMsg)
-                        
-                    case config.streamSendreq:
-                        logger_core_app.info(f"core_sub2app: 处理 streamSendreq")
-                        data = message["msg"]
-                        smFlag = SM_instance.update_state(message["mid"], data["context"])
-                        if smFlag:
-                            logger_core_app.debug(f"core_sub2app: streamSendreq 会话状态更新成功: {SM_instance.sessions}")
-                        else:
-                            logger_core_app.warning(f"core_sub2app: streamSendreq 会话状态更新失败")
-                        sendMsg = {} # This is not the standard OBU message format from config
-                        sendMsg["RL"] = data["rl"]
-                        sendMsg["DestId"] = data["did"]
-                        sendMsg["PT"] = data["pt"]
-                        sendMsg["context"] = data["context"]
-                        sendMsg["mid"] = message["mid"] # Pass original mid
-                        logger_core_app.info(f"core_sub2app: streamSendreq (mid {message['mid']}), context '{data['context']}', 放入 pub2obu_queue")
-                        pub2obu_queue.put(sendMsg)
+                elif mid == config.streamSendreq:
+                    logger_core_app.info(f"core_sub2app: 处理 streamSendreq")
+                    data = message["msg"]
+                    smFlag = SM_instance.update_state(message["mid"], data["context"])
+                    if smFlag:
+                        logger_core_app.debug(f"core_sub2app: streamSendreq 会话状态更新成功: {SM_instance.sessions}")
+                    else:
+                        logger_core_app.warning(f"core_sub2app: streamSendreq 会话状态更新失败")
+                    sendMsg = {} # This is not the standard OBU message format from config
+                    sendMsg["RL"] = data["rl"]
+                    sendMsg["DestId"] = data["did"]
+                    sendMsg["PT"] = data["pt"]
+                    sendMsg["context"] = data["context"]
+                    sendMsg["mid"] = message["mid"] # Pass original mid
+                    logger_core_app.info(f"core_sub2app: streamSendreq (mid {message['mid']}), context '{data['context']}', 放入 pub2obu_queue")
+                    pub2obu_queue.put(sendMsg)
 
-                    case config.streamSend:
-                        logger_core_app.info(f"core_sub2app: 处理 streamSend")
-                        data = message["msg"]
-                        sendMsg = {} # Not standard OBU message format
-                        sendMsg["sid"] = data["sid"]
-                        sendMsg["data"] = data["data"] # Potentially large
-                        sendMsg["mid"] = message["mid"] # Pass original mid
-                        logger_core_app.info(f"core_sub2app: streamSend (mid {message['mid']}), sid '{data['sid']}', data len {len(data.get('data',''))}, 放入 pub2obu_queue")
-                        pub2obu_queue.put(sendMsg)
+                elif mid == config.streamSend:
+                    logger_core_app.info(f"core_sub2app: 处理 streamSend")
+                    data = message["msg"]
+                    sendMsg = {} # Not standard OBU message format
+                    sendMsg["sid"] = data["sid"]
+                    sendMsg["data"] = data["data"] # Potentially large
+                    sendMsg["mid"] = message["mid"] # Pass original mid
+                    logger_core_app.info(f"core_sub2app: streamSend (mid {message['mid']}), sid '{data['sid']}', data len {len(data.get('data',''))}, 放入 pub2obu_queue")
+                    pub2obu_queue.put(sendMsg)
 
-                    case config.streamSendend:
-                        logger_core_app.info(f"core_sub2app: 处理 streamSendend")
-                        data = message["msg"]
-                        smFlag = SM_instance.update_state(message["mid"], data["context"])
-                        if smFlag:
-                            logger_core_app.debug(f"core_sub2app: streamSendend 会话状态更新成功: {SM_instance.sessions}")
-                        else:
-                            logger_core_app.warning(f"core_sub2app: streamSendend 会话状态更新失败")
-                        sendMsg = {} # Not standard OBU message format
-                        sendMsg["sid"] = data["sid"]
-                        sendMsg["did"] = data["did"]
-                        sendMsg["context"] = data["context"]
-                        sendMsg["mid"] = message["mid"] # Pass original mid
-                        logger_core_app.info(f"core_sub2app: streamSendend (mid {message['mid']}), sid '{data['sid']}', 放入 pub2obu_queue")
-                        pub2obu_queue.put(sendMsg)
-                    
-                    # You might have cases for file handling (111-113) here
-                    # case config.fileTransferRequest: ...
-                    # case config.fileTransferData: ...
-                    # case config.fileTransferEnd: ...
+                elif mid == config.streamSendend:
+                    logger_core_app.info(f"core_sub2app: 处理 streamSendend")
+                    data = message["msg"]
+                    smFlag = SM_instance.update_state(message["mid"], data["context"])
+                    if smFlag:
+                        logger_core_app.debug(f"core_sub2app: streamSendend 会话状态更新成功: {SM_instance.sessions}")
+                    else:
+                        logger_core_app.warning(f"core_sub2app: streamSendend 会话状态更新失败")
+                    sendMsg = {} # Not standard OBU message format
+                    sendMsg["sid"] = data["sid"]
+                    sendMsg["did"] = data["did"]
+                    sendMsg["context"] = data["context"]
+                    sendMsg["mid"] = message["mid"] # Pass original mid
+                    logger_core_app.info(f"core_sub2app: streamSendend (mid {message['mid']}), sid '{data['sid']}', 放入 pub2obu_queue")
+                    pub2obu_queue.put(sendMsg)
+                
+                # You might have elif mid ==s for file handling (111-113) here
+                # elif mid == config.fileTransferRequest: ...
+                # elif mid == config.fileTransferData: ...
+                # elif mid == config.fileTransferEnd: ...
 
-                    case _: # Default case for unhandled mid
-                        logger_core_app.warning(f"core_sub2app: 未处理的 mid: {mid}, 消息: {message}")
+                else: # Default case for unhandled mid
+                    logger_core_app.warning(f"core_sub2app: 未处理的 mid: {mid}, 消息: {message}")
                         
             # Echo logic from original code (commented out)
             """if time.time() - last_timer_send >= config.echo_time:

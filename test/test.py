@@ -109,7 +109,7 @@ def main():
 
             elif choice == 6: # notifyMessage with example values
                 tid = 1
-                oid = "A12345"
+                oid = "京A12345"
                 did = "津A12345"
                 topic = 12345
                 act = 1
