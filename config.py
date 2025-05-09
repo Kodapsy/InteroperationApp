@@ -26,6 +26,8 @@ echo_time = 10
 
 appReg = 1
 appAck = 2
+mapReg = 3
+mapRsp = 4
 boardCastPub = 11
 boardCastSub = 12
 boardCastSubNotify = 13

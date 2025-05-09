@@ -177,7 +177,7 @@ def core_sub2app():
                         logger_core_app.info(f"core_sub2app: 处理 appReg from appid: {appid}")
                         tid = message["tid"]
                         data = message["msg"]
-                        msg_response = { "tid" : tid }
+                        msg_response = { "mid" : mid,"tid" : tid }
                         act = data["act"]
                         logger_core_app.debug(f"core_sub2app: appReg action: {act}")
                         if act == config.appActLogin:
@@ -197,7 +197,20 @@ def core_sub2app():
                             msg_response["result"] = "NACK_UNKNOWN_ACTION"
                         logger_core_app.info(f"core_sub2app: appReg 发送响应: {msg_response}")
                         pub2app_socket.send_string(json.dumps(msg_response, ensure_ascii=False))
-
+                    elif mid == config.mapReg:
+                        logger_core_app.info(f"core_sub2app: 处理 appReg from appid: {appid}")
+                        tid = message["tid"]
+                        data = message["msg"]
+                        msg_response = { "mid" : mid,"tid" : tid }  
+                        capId = data.get("capId")
+                        capVersion = data.get("capVersion")
+                        capConfig = data.get("capConfig")
+                        logger_core_app.debug(f"core_sub2app: mapReg capId: {capId}, capVersion: {capVersion}, capConfig: {capConfig}")
+                        devices = maps_instance.getDevices(capId, capVersion, capConfig)
+                        msg_response["devices"] = devices
+                        logger_core_app.info(f"core_sub2app: mapReg 发送响应: {msg_response}")
+                        pub2app_socket.send_string(json.dumps(msg_response, ensure_ascii=False))
+                        
                     elif mid == config.boardCastPub:
                         logger_core_app.info(f"core_sub2app: 处理 boardCastPub")
                         data = message["msg"]
