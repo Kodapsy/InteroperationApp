@@ -2,6 +2,7 @@ import zmq
 import json
 import sys
 import os
+import time
 import base64 # Added for Base64 encoding
 
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -21,6 +22,7 @@ class ICPServer:
         self.context = zmq.Context()
         self.socket = self.context.socket(zmq.PUB)
         self.socket.connect(f"tcp://{config.selfip}:{config.send_sub_port}")
+        time.sleep(0.5)
         print(f"Server started")
 
     def send(self, message: dict):
