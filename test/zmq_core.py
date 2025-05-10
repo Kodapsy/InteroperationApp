@@ -526,12 +526,15 @@ def core_sub2obu():
                 elif message_type == config.sendreq_type:
                     logger_core_obu.info(f"core_sub2obu: 处理 sendreq_type (stream send ready from OBU)")
                     sendMsg_app = {}
-                    sendMsg_app["DestId"] = data.get("did")
+                    sendMsg_app["did"] = data.get("did")
                     sendMsg_app["context"] = data.get("context")
                     sendMsg_app["sid"] = data.get("sid")
                     sendMsg_app["mid"] = data.get("mid")
                     logger_core_obu.info(f"core_sub2obu: sendreq_type, 转发到 APP socket: {sendMsg_app}")
-                    pub2app_socket.send_string(json.dumps(sendMsg_app, ensure_ascii=False))
+                    topic = ""
+                    json_sendMsg_app = json.dumps(sendMsg_app, ensure_ascii=False)
+                    topic_prefixed_message = f"{topic}{json_sendMsg_app}".strip()
+                    pub2app_socket.send_string(topic_prefixed_message)
 
                     logger_core_obu.info(f"core_sub2obu: sendreq_type, 准备发送 streamSendrdy (mid {config.streamSendrdy}) 到 OBU")
                     pubMsg_obu = config.pubMsg.copy()
