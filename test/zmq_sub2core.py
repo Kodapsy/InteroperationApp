@@ -1,18 +1,18 @@
 import argparse
 import zmq
 import threading
-import InteroperationApp.config as config
+import InteroperationApp.czlconfig as czlconfig
 
 def zmq_core_sub_server(port,topic):
     """ZMQ 服务器线程，绑定到指定 IP 和端口"""
     context = zmq.Context()
     sub_socket = context.socket(zmq.SUB)
-    sub_socket.connect(f"tcp://{config.selfip}:{config.recv_sub_port}")
+    sub_socket.connect(f"tcp://{czlconfig.selfip}:{czlconfig.recv_sub_port}")
     sub_socket.setsockopt_string(zmq.SUBSCRIBE, topic)
-    print(f"[ZMQ Server] 服务器启动，监听 {config.selfip}:{config.recv_sub_port}")
+    print(f"[ZMQ Server] 服务器启动，监听 {czlconfig.selfip}:{czlconfig.recv_sub_port}")
     
     pub_socket = context.socket(zmq.PUB)
-    pub_socket.connect(f"tcp://{config.selfip}:{port}")  # 连接 XPUB 代理-代理的发送端口
+    pub_socket.connect(f"tcp://{czlconfig.selfip}:{port}")  # 连接 XPUB 代理-代理的发送端口
     
     while True:
         message = sub_socket.recv_string()

@@ -7,7 +7,7 @@ sys.path.append("/home/nvidia/mydisk/czl/InteroperationApp")
 # sys.path.append("/home/czl/InteroperationApp") # Can be removed if covered
 
 from module.zmq_server import ICPServer, ICPClient # Assuming zmq_server.py contains the ICPServer expecting bytes for coopMap
-import config # Import the original config module
+import czlconfig # Import the original config module
 
 def main():
     print("🚀 ICPServer 测试程序启动")
@@ -16,7 +16,7 @@ def main():
     app_id = int(app_id_input) if app_id_input else 0
 
     try:
-        print(f"使用配置: selfip={config.selfip}, send_sub_port={config.send_sub_port}")
+        print(f"使用配置: selfip={czlconfig.selfip}, send_sub_port={czlconfig.send_sub_port}")
         server = ICPServer(app_id=app_id)
     except Exception as e:
         print(f"❌ 初始化服务器失败: {e}")
@@ -55,7 +55,7 @@ def main():
                 CapID = int(input("CapID: "))
                 CapVersion = int(input("CapVersion: "))
                 CapConfig = int(input("CapConfig: "))
-                act_prompt = f"操作 ({config.appActLogin}-注册, {config.appActLogout}-注销, {config.appActopen}-广播打开, {config.appActclose}-广播关闭): "
+                act_prompt = f"操作 ({czlconfig.appActLogin}-注册, {czlconfig.appActLogout}-注销, {czlconfig.appActopen}-广播打开, {czlconfig.appActclose}-广播关闭): "
                 act = int(input(act_prompt))
                 tid = int(input("tid (事务ID, 默认为0): ") or "0")
                 server.AppMessage(CapID, CapVersion, CapConfig, act, tid)

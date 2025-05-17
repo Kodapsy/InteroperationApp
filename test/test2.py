@@ -7,7 +7,7 @@ sys.path.append("/home/nvidia/mydisk/czl/InteroperationApp")
 # sys.path.append("/home/czl/InteroperationApp") # Can be removed if covered
 
 from module.zmq_server import ICPServer, ICPClient # Assuming zmq_server.py contains the ICPServer expecting bytes for coopMap
-import config # Import the original config module
+import InteroperationApp.czlconfig as czlconfig # Import the original config module
 
 def main():
     print("🚀 ICPServer 测试程序启动")

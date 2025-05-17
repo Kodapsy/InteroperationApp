@@ -24,6 +24,7 @@ board_id = ""
 
 echo_time = 10
 
+Ack = 0
 appReg = 1
 appAck = 2
 mapReg = 3

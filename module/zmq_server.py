@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.append(parent_dir)
-import config
+import czlconfig
 
 class ICPServer:
     def __init__(self, app_id:int):
@@ -29,7 +29,7 @@ class ICPServer:
         self.context = zmq.Context()
         self.socket = self.context.socket(zmq.PUB)
         try:
-            connect_address = f"tcp://{config.selfip}:{config.send_sub_port}"
+            connect_address = f"tcp://{czlconfig.selfip}:{czlconfig.send_sub_port}"
             self.socket.connect(connect_address)
             time.sleep(0.5)
             logger.info(f"Server started, app_id: {self.app_id}, connected to {connect_address}") 
@@ -75,7 +75,7 @@ class ICPServer:
         CapVersion = CapVersion & 0xF
         CapConfig = CapConfig & 0xFFF
         message = {
-            "mid":config.appReg,
+            "mid":czlconfig.appReg,
             "app_id": self.app_id,
             "tid": tid,
             "msg":{
@@ -116,7 +116,7 @@ class ICPServer:
             return
         
         message = {
-            "mid":config.boardCastPub,
+            "mid":czlconfig.boardCastPub,
             "app_id": self.app_id,
             "tid": tid,
             "msg":{
@@ -161,7 +161,7 @@ class ICPServer:
             return
 
         message = {
-            "mid":config.boardCastSub,
+            "mid":czlconfig.boardCastSub,
             "app_id": self.app_id,
             "tid": tid,
             "msg":{
@@ -210,7 +210,7 @@ class ICPServer:
             return
 
         message = {
-            "mid":config.boardCastSubNotify,
+            "mid":czlconfig.boardCastSubNotify,
             "app_id": self.app_id,
             "tid": tid,
             "msg":{
@@ -261,7 +261,7 @@ class ICPServer:
             return
         
         message = {
-            "mid":config.subScribe,
+            "mid":czlconfig.subScribe,
             "app_id": self.app_id,
             "tid": tid,
             "msg":{
@@ -313,7 +313,7 @@ class ICPServer:
             return
 
         message = {
-            "mid":config.notify,
+            "mid":czlconfig.notify,
             "app_id": self.app_id,
             "tid": tid,
             "msg":{ 
@@ -346,7 +346,7 @@ class ICPServer:
             logger.error("streamSendreq: did, context, rl 和 pt 不能为空！请提供有效的数据。") 
             return
         message = {
-            "mid":config.streamSendreq,
+            "mid":czlconfig.streamSendreq,
             "app_id": self.app_id,
             "msg":{
                 "did": did,
@@ -370,7 +370,7 @@ class ICPServer:
             logger.error("streamSend: sid 和 data 不能为空！请提供有效的数据。") 
             return
         message = {
-            "mid":config.streamSend,
+            "mid":czlconfig.streamSend,
             "app_id": self.app_id,
             "msg":{
                 "sid": sid,
@@ -394,7 +394,7 @@ class ICPServer:
             logger.error("streamSendend: sid, did 和 context 不能为空！请提供有效的数据。") 
             return
         message = {
-            "mid":config.streamSendend,
+            "mid":czlconfig.streamSendend,
             "app_id": self.app_id,
             "msg":{
                 "did": did,
@@ -405,7 +405,7 @@ class ICPServer:
         self.send(message)
     
     def sendFile(self,
-                 did:int = 0, 
+                 did:str = "", 
                  context:str = "",
                  rl:int =1, 
                  pt:int = 0,
@@ -423,7 +423,7 @@ class ICPServer:
             logger.error("sendFile: did, context, rl, pt 和 file 不能为空！请提供有效的数据。") 
             return
         message = {
-            "mid":config.sendFile,
+            "mid":czlconfig.sendFile,
             "app_id": self.app_id,
             "msg":{
                 "did": did,
@@ -440,8 +440,8 @@ class ICPClient:
         """
         初始化 ICPClient 类，连接到指定端口。
         """
-        self.port = config.recv_pub_port
-        self.ip = config.selfip
+        self.port = czlconfig.recv_pub_port
+        self.ip = czlconfig.selfip
         self.context = zmq.Context()
         self.socket = self.context.socket(zmq.SUB)
         try:
@@ -460,14 +460,15 @@ class ICPClient:
         
     def recv_message(self):
         """
-        接收消息方法：支持带 topic 和不带 topic 的情况
+        接收消息方法：支持带 topic 和不带 topic 的情况，
+        并对消息体中的 'coopMap' 字段进行 Base64 解码。
         """
-        message = ""
-        parsed_message = None
+        raw_message_str = ""
+        parsed_message_dict = None
         try:
-            message = self.socket.recv_string()
+            raw_message_str = self.socket.recv_string()
         except zmq.error.ZMQError as e:
-            if e.errno == zmq.EAGAIN: # Non-blocking mode and no message
+            if e.errno == zmq.EAGAIN:
                 logger.debug("ZMQ recv_string would block (EAGAIN). No message.")
                 return None
             logger.error(f"ZMQ error receiving string: {e}")
@@ -476,31 +477,53 @@ class ICPClient:
             logger.error(f"An unexpected error occurred during recv_string: {e}")
             return None
 
-
         try:
-            # 判断是否可能包含 topic（按第一个空格拆分）
-            parts = message.split(" ", 1)
-            if len(parts) == 2: # Potentially topic and JSON
-                _topic, json_part = parts # _topic might be used or discarded
-                parsed_message = json.loads(json_part)
-            else: # No space, assume entire message is JSON (for cases with empty topic subscription)
-                parsed_message = json.loads(message)
-            return parsed_message
+            parts = raw_message_str.split(" ", 1)
+            json_part_str = ""
+            if len(parts) == 2:
+                _topic, json_part_str = parts
+            else:
+                json_part_str = raw_message_str
+            
+            parsed_message_dict = json.loads(json_part_str)
+
+            # --- 开始解码 coopMap ---
+            if isinstance(parsed_message_dict, dict) and "msg" in parsed_message_dict and \
+               isinstance(parsed_message_dict["msg"], dict) and "coopmap" in parsed_message_dict["msg"]:
+                
+                coopMap_str = parsed_message_dict["msg"]["coopmap"]
+                if isinstance(coopMap_str, str) and coopMap_str:
+                    try:
+                        base64_encoded_bytes = coopMap_str.encode('utf-8')
+                        original_coopMap_bytes = base64.b64decode(base64_encoded_bytes)
+                        
+                        parsed_message_dict["msg"]["coopmap"] = original_coopMap_bytes 
+                        logger.info(f"Successfully decoded 'coopMap' field.")
+                    except base64.binascii.Error as b64_err:
+                        logger.error(f"Failed to Base64 decode 'coopMap' string ('{coopMap_str}'): {b64_err}. Keeping as string.")
+                    except UnicodeEncodeError as enc_err:
+                        logger.error(f"Failed to encode 'coopMap' string to bytes before Base64 decoding: {enc_err}. Keeping as string.")
+                    except Exception as e_decode:
+                        logger.error(f"An unexpected error occurred during 'coopMap' decoding: {e_decode}. Keeping as string.")
+                elif coopMap_str == "":
+                     logger.debug("'coopMap' field is an empty string, no decoding needed.")
+
+            return parsed_message_dict
+        
         except json.JSONDecodeError:
-            logger.error(f"[!] Failed to decode message: {message}") 
+            logger.error(f"[!] Failed to decode JSON message: {raw_message_str}")
             return None
-        except ValueError: # Handles cases where split might fail if message isn't as expected
-            logger.error(f"[!] Malformed message structure (expected topic and JSON or just JSON): {message}") 
-            # Attempt to parse as plain JSON if splitting failed or wasn't appropriate
+        except ValueError: 
+            logger.error(f"[!] Malformed message structure (expected topic and JSON or just JSON): {raw_message_str}")
             try:
-                parsed_message = json.loads(message)
-                return parsed_message
+                parsed_message_dict = json.loads(raw_message_str)
+                return parsed_message_dict
             except json.JSONDecodeError:
-                logger.error(f"[!] Failed to decode message as plain JSON either: {message}") 
+                logger.error(f"[!] Failed to decode message as plain JSON either: {raw_message_str}")
                 return None
-            except Exception as e_inner: # Catch other potential errors during the second parse attempt
-                logger.error(f"[!] Unexpected error during fallback JSON parsing: {e_inner}. Original message: {message}")
+            except Exception as e_inner:
+                logger.error(f"[!] Unexpected error during fallback JSON parsing: {e_inner}. Original message: {raw_message_str}")
                 return None
-        except Exception as e_outer: # Catch any other unexpected errors during initial processing
-             logger.error(f"[!] Unexpected error processing received message: {e_outer}. Original message: {message}")
+        except Exception as e_outer:
+             logger.error(f"[!] Unexpected error processing received message: {e_outer}. Original message: {raw_message_str}")
              return None
