@@ -26,12 +26,18 @@ if __msg.id == __msg.ids.ITP_RECEIVE_STREAM_READY:
 	# 将sid的信息保存在一个全局表中，备查
 	key = remoteDevice + "-" + streamId
 	GlobDict::set(key, appContext.sid)
-	val = {}
-	val.oid = remoteDevice
-	val.context = appContext.context
-	valj= toJson(val)
-	GlobDict::set(streamId,valj)
-
+	#val = {}
+	#val.oid = remoteDevice
+	#val.context = appContext.context
+	#valj= toJson(val)
+	#GlobDict::set(streamId,valj)
+	mm = {}
+	mm.oid = remoteDevice
+	mm.Message_type = 4
+	mm.sid = sid
+	mm.mid = 103
+	mj = toJson(mm)
+	zmq_publish(mj)
 	# 等待足够的时间，这段时间内应该收到数据
 	sleep(5000)
 
@@ -70,7 +76,7 @@ if __msg.id == __msg.ids.ITP_RECEIVED_DATA:
 	zmq_publish(mj)
 
 	GlobDict::del(key)
-	GlobDict::del(streamId)
+	#GlobDict::del(streamId)
 	endStream(streamId, remoteDevice)
 	exit()
 elif __msg.id == __msg.ids.ITP_RECEIVED_FILE:

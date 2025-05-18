@@ -66,8 +66,8 @@ def endStream(streamId):
 # 获取消息类型
 message_type = j.get("Message Type", -1)
 mid = j.get("mid",-1)
-ip = '192.168.20.199'
-port = 7001
+ip = ''
+port = 0
 
 if mid == 101:
     destId = j.get("DestId",-1)
