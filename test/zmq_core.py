@@ -848,33 +848,6 @@ def core_sub2obu():
                                 except Exception as e_send_app:
                                      logger_core_obu.error(f"core_sub2obu: 转发 streamSendend ACK 到 APP socket 失败: {e_send_app}", exc_info=True)
                                 continue 
-                            elif mid_tlv == czlconfig.streamRecv:
-                                logger_core_obu.info(f"core_sub2obu: 处理 streamRecv")
-                                # 构建发送给 APP 的消息
-                                sendMsg_app = {}
-                                sendMsg_app["sid"] = data["sid"]
-                                sendMsg_app["data"] = data["data"]
-                                sendMsg_app["mid"] = data["mid"]
-
-                                logger_core_obu.info(f"core_sub2obu: streamRecv, 转发到 APP socket, sid: {data.get('sid')}, data len {len(data.get('data',''))}")
-                                # 流数据使用特定 topic (如 "W") 发送给 App
-                                topic_stream = "W"
-                                json_sendMsg_app = json.dumps(sendMsg_app, ensure_ascii=False)
-                                topic_prefixed_message = f"{topic_stream} {json_sendMsg_app}".strip()
-                                try:
-                                    pub2app_socket.send_string(topic_prefixed_message)
-                                except Exception as e_send_app:
-                                    logger_core_obu.error(f"core_sub2obu: 转发 streamRecv 消息到 APP socket 失败: {e_send_app}", exc_info=True)
-
-                                    if "mid" in msg and "msg" in msg:
-                                        topic_prefixed_message = f"{topic} {json.dumps(msg, ensure_ascii=False)}"
-                                        logger_core_obu.info(f"core_sub2obu: {message_type}, topic '{topic}', 转发到 APP socket: {str(msg)[:200]}...")
-                                        try:
-                                            pub2app_socket.send_string(topic_prefixed_message)
-                                        except Exception as e_send_app:
-                                            logger_core_obu.error(f"core_sub2obu: 转发消息到 APP socket 失败: {e_send_app}", exc_info=True)
-                                    else:
-                                        logger_core_obu.error(f"core_sub2obu: 收到未处理的 TLV mid {mid_tlv} ({message_type}), 或构建 APP 消息失败。TLVmsg: {str(TLVmsg)[:200]}")
 
 
                         except KeyError as e_key_tlv:
@@ -887,9 +860,11 @@ def core_sub2obu():
                             continue
                     elif message_type == czlconfig.sendreq_type:
                         logger_core_obu.info(f"core_sub2obu: 处理 streamSendrdy ({data})")
-                        msg["mid"] = data["mid"]
-                        msg["sid"] = data["sid"]
-                        msg["context"] = data["ContextId"]
+                        msg = {}
+                        msg["mid"] = data.get("mid")
+                        msg["sid"] = data.get("sid")
+                        msg["context"] = data.get("context")
+                        msg["did"] = data.get("did")
                         msg["oid"] = data.get("oid")
 
                         logger_core_obu.info(f"core_sub2obu: streamSendrdy, 转发到 APP socket: {msg}")
@@ -900,6 +875,32 @@ def core_sub2obu():
                             pub2app_socket.send_string(topic_prefixed_message)
                         except Exception as e_send_app:
                              logger_core_obu.error(f"core_sub2obu: 转发 streamSendrdy 到 APP socket 失败: {e_send_app}", exc_info=True)
+                    elif message_type == czlconfig.recv_type:
+                        logger_core_obu.info(f"core_sub2obu: 处理 streamRecv")
+                        sendMsg_app = {}
+                        sendMsg_app["sid"] = data.get("sid")
+                        sendMsg_app["data"] = data.get("data")
+                        sendMsg_app["mid"] = data.get("mid")
+
+                        logger_core_obu.info(f"core_sub2obu: streamRecv, 转发到 APP socket, sid: {data.get('sid')}, data len {len(data.get('data',''))}")
+                        # 流数据使用特定 topic (如 "W") 发送给 App
+                        topic_stream = "W"
+                        json_sendMsg_app = json.dumps(sendMsg_app, ensure_ascii=False)
+                        topic_prefixed_message = f"{topic_stream} {json_sendMsg_app}".strip()
+                        try:
+                            pub2app_socket.send_string(topic_prefixed_message)
+                        except Exception as e_send_app:
+                            logger_core_obu.error(f"core_sub2obu: 转发 streamRecv 消息到 APP socket 失败: {e_send_app}", exc_info=True)
+
+                            if "mid" in msg and "msg" in msg:
+                                topic_prefixed_message = f"{topic} {json.dumps(msg, ensure_ascii=False)}"
+                                logger_core_obu.info(f"core_sub2obu: {message_type}, topic '{topic}', 转发到 APP socket: {str(msg)[:200]}...")
+                                try:
+                                    pub2app_socket.send_string(topic_prefixed_message)
+                                except Exception as e_send_app:
+                                    logger_core_obu.error(f"core_sub2obu: 转发消息到 APP socket 失败: {e_send_app}", exc_info=True)
+                            else:
+                                logger_core_obu.error(f"core_sub2obu: 收到未处理的 TLV mid {mid_tlv} ({message_type}), 或构建 APP 消息失败。TLVmsg: {str(TLVmsg)[:200]}")
                     else:
                         logger_core_obu.error(f"[core_sub2obu] 收到未知消息类型从 OBU: {message_type}, 原始数据: {message_str[:200]}")
 

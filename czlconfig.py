@@ -12,6 +12,7 @@ pub_type = 3
 sub_type = 2
 echo_type = 1
 sendreq_type = 4
+recv_type = 5
 
 #数据存放目录
 data_dir = "/home/nvidia/mydisk/czl/InteroperationApp/itp_data"
