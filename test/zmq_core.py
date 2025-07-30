@@ -5,6 +5,7 @@ import os
 import sys
 import glob
 import time
+import base64
 sys.path.append("/home/nvidia/mydisk/czl/InteroperationApp")
 #sys.path.append("/home/czl/InteroperationApp") # 注释掉本地测试路径
 from module.CapabilityManager import CapabilityManager
@@ -290,10 +291,11 @@ def core_sub2app():
                         sendMsg["Topic"] = data["topic"]
                         sendMsg["PayloadType"] = czlconfig.type_common
                         sendMsg["EncodeMode"] = czlconfig.encodeASN
-
+                        original_bytes = base64.b64decode(data["coopMap"])
+                        hex_value_for_common_data = original_bytes.hex()
                         TLVmsg = {
                             "CommonDataType": data["coopMapType"],
-                            "CommonData": data["coopMap"],
+                            "CommonData": hex_value_for_common_data,
                             "Mid": czlconfig.boardCastPub
                         }
 
@@ -335,10 +337,11 @@ def core_sub2app():
                         sendMsg["Topic"] = data["topic"]
                         sendMsg["PayloadType"] = czlconfig.type_common
                         sendMsg["EncodeMode"] = czlconfig.encodeASN
-
+                        original_bytes = base64.b64decode(data["coopMap"])
+                        hex_value_for_common_data = original_bytes.hex()
                         TLVmsg = {
                             "CommonDataType": data["coopMapType"],
-                            "CommonData": data["coopMap"],
+                            "CommonData": hex_value_for_common_data,
                             "BearFlag": 1 if data["bearCap"] == 1 else 0,
                             "ContextId": data["context"],
                             "Mid": czlconfig.boardCastSub
@@ -404,10 +407,11 @@ def core_sub2app():
                         sendMsg["Topic"] = data["topic"]
                         sendMsg["PayloadType"] = czlconfig.type_common
                         sendMsg["EncodeMode"] = czlconfig.encodeASN
-
+                        original_bytes = base64.b64decode(data["coopMap"])
+                        hex_value_for_common_data = original_bytes.hex()
                         TLVmsg = {
                             "CommonDataType":data["coopMapType"],
-                            "CommonData":data["coopMap"],
+                            "CommonData":hex_value_for_common_data,
                             "BearFlag":1 if data["bearCap"] == 1 else 0,
                             "ContextId":data["context"],
                             "Mid":czlconfig.boardCastSubNotify
@@ -472,10 +476,11 @@ def core_sub2app():
                         sendMsg["Topic"] = data["topic"]
                         sendMsg["PayloadType"] = czlconfig.type_common
                         sendMsg["EncodeMode"] = czlconfig.encodeASN
-
+                        original_bytes = base64.b64decode(data["coopMap"])
+                        hex_value_for_common_data = original_bytes.hex()
                         TLVmsg = {
                             "CommonDataType":data["coopMapType"],
-                            "CommonData":data["coopMap"],
+                            "CommonData":hex_value_for_common_data,
                             "BearFlag":2 if data["bearinfo"] == 1 else 0,
                             "ContextId":data["context"],
                             "Mid":czlconfig.subScribe
@@ -539,10 +544,11 @@ def core_sub2app():
                         sendMsg["Topic"] = data["topic"]
                         sendMsg["PayloadType"] = czlconfig.type_common
                         sendMsg["EncodeMode"] = czlconfig.encodeASN
-
+                        original_bytes = base64.b64decode(data["coopMap"])
+                        hex_value_for_common_data = original_bytes.hex()
                         TLVmsg = {
                             "CommonDataType":data["coopMapType"],
-                            "CommonData":data["coopMap"],
+                            "CommonData":hex_value_for_common_data,
                             "BearFlag":1 if data["bearCap"] == 1 else 0,
                             "ContextId":data["context"],
                             "Mid":czlconfig.notify
@@ -769,7 +775,7 @@ def core_sub2obu():
                                 msg["msg"] = {}
                                 msg["msg"]["oid"] = data.get("SourceId", "Unknown")
                                 msg["msg"]["topic"] = topic
-                                msg["msg"]["coopmap"] = TLVmsg["CommonData"]
+                                msg["msg"]["coopmap"] = base64.b64encode(TLVmsg["CommonData"]).decode('utf-8')
                                 msg["msg"]["coopmaptype"] = TLVmsg["CommonDataType"]
                                 json_msg =  json.dumps(msg, ensure_ascii=False)
                                 topic_prefixed_message = f"{topic} {json_msg}".strip()
@@ -790,7 +796,7 @@ def core_sub2obu():
                                 msg["msg"]["oid"] = data.get("SourceId", "Unknown")
                                 msg["msg"]["topic"] = topic
                                 msg["msg"]["context"] = TLVmsg["ContextId"]
-                                msg["msg"]["coopmap"] = TLVmsg["CommonData"]
+                                msg["msg"]["coopmap"] = base64.b64encode(TLVmsg["CommonData"]).decode('utf-8')
                                 msg["msg"]["bearcap"] = TLVmsg["BearFlag"]
                                 json_msg =  json.dumps(msg, ensure_ascii=False)
                                 topic_prefixed_message = f"{topic} {json_msg}".strip()
@@ -811,7 +817,7 @@ def core_sub2obu():
                                 msg["msg"]["oid"] = data.get("SourceId", "Unknown")
                                 msg["msg"]["topic"] = topic
                                 msg["msg"]["context"] = TLVmsg["ContextId"]
-                                msg["msg"]["coopmap"] = TLVmsg["CommonData"]
+                                msg["msg"]["coopmap"] = base64.b64encode(TLVmsg["CommonData"]).decode('utf-8')
                                 msg["msg"]["bearcap"] = TLVmsg["BearFlag"]
                                 json_msg =  json.dumps(msg, ensure_ascii=False)
                                 topic_prefixed_message = f"{topic} {json_msg}".strip()
@@ -835,7 +841,7 @@ def core_sub2obu():
                                 msg["msg"]["topic"] = topic
                                 msg["msg"]["act"] = data.get("OP")
                                 msg["msg"]["context"] = TLVmsg["ContextId"]
-                                msg["msg"]["coopmap"] = TLVmsg["CommonData"]
+                                msg["msg"]["coopmap"] = base64.b64encode(TLVmsg["CommonData"]).decode('utf-8')
                                 msg["msg"]["bearinfo"] = TLVmsg["BearFlag"]
                                 json_msg =  json.dumps(msg, ensure_ascii=False)
                                 topic_prefixed_message = f"{topic} {json_msg}".strip()
@@ -857,7 +863,7 @@ def core_sub2obu():
                                 msg["msg"]["topic"] = topic
                                 msg["msg"]["act"] = data.get("OP")
                                 msg["msg"]["context"] = TLVmsg["ContextId"]
-                                msg["msg"]["coopmap"] = TLVmsg["CommonData"]
+                                msg["msg"]["coopmap"] = base64.b64encode(TLVmsg["CommonData"]).decode('utf-8')
                                 msg["msg"]["bearcap"] = TLVmsg["BearFlag"]
                                 json_msg =  json.dumps(msg, ensure_ascii=False)
                                 topic_prefixed_message = f"{topic} {json_msg}".strip()

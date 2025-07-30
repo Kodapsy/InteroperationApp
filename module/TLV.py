@@ -15,7 +15,7 @@ class TLVEncoderDecoder:
     "ContextId":       {"tag": 0x000C, "length": 16, "type": "hex"},
     "BearFlag":        {"tag": 0x000D, "length": 4,  "type": "int"},
     "CommonDataType":  {"tag": 0x000E, "length": 4,  "type": "int"},
-    "CommonData":      {"tag": 0x000F, "length": None, "type": "str"},
+    "CommonData":      {"tag": 0x000F, "length": None, "type": "hex"},
 }
     # 定义字段类型映射表
 
