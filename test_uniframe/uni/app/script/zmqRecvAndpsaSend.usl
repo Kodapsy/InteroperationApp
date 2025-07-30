@@ -68,7 +68,7 @@ message_type = j.get("Message Type", -1)
 mid = j.get("mid",-1)
 ip = ''
 port = 0
-
+#ip = ''
 if mid == 101:
     destId = j.get("DestId",-1)
     context = j.get("context",-1)
@@ -82,6 +82,7 @@ if mid == 101:
     if streamId < 0: 
         print("No usable streamId")
         exit()
+    #sendData(streamId,"req",3)
     s = {}
     s.sid = sid
     s.did = destId

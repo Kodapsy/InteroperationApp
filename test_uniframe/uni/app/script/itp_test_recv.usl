@@ -16,9 +16,16 @@ if __msg.id == __msg.ids.ITP_RECEIVE_STREAM_READY:
 	# 取得来源
 	streamId = __msg.body.streamId
 	remoteDevice = __msg.body.remoteDevice
-
-	# 取出appContext，解析，其中会有sid和等待消息的次数
-	appContext = __msg.body.appContext.jsonParse()
+	if __msg.body.appContext != "":
+		appContext = __msg.body.appContext.jsonParse()
+		mm = {}
+		mm.oid = remoteDevice
+		mm.Message_type = 4
+		mm.sid = appContext.sid
+		mm.context = appContext.context
+		mm.mid = 103
+		mj = toJson(mm)
+		zmq_publish(mj)
 	if !defined(appContext) || !defined(appContext.sid):
 		log("invalid json format: " + __msg.body.appContext)
 		exit()
@@ -31,14 +38,6 @@ if __msg.id == __msg.ids.ITP_RECEIVE_STREAM_READY:
 	#val.context = appContext.context
 	#valj= toJson(val)
 	#GlobDict::set(streamId,valj)
-	mm = {}
-	mm.oid = remoteDevice
-	mm.Message_type = 4
-	mm.sid = appContext.sid
-	mm.context = appContext.context
-	mm.mid = 103
-	mj = toJson(mm)
-	zmq_publish(mj)
 	# 等待足够的时间，这段时间内应该收到数据
 	sleep(5000)
 
@@ -75,7 +74,6 @@ if __msg.id == __msg.ids.ITP_RECEIVED_DATA:
 	mm.mid = 105
 	mj = toJson(mm)
 	zmq_publish(mj)
-
 	GlobDict::del(key)
 	#GlobDict::del(streamId)
 	endStream(streamId, remoteDevice)

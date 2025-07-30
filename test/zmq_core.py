@@ -775,7 +775,7 @@ def core_sub2obu():
                                 msg["msg"] = {}
                                 msg["msg"]["oid"] = data.get("SourceId", "Unknown")
                                 msg["msg"]["topic"] = topic
-                                msg["msg"]["coopmap"] = base64.b64encode(TLVmsg["CommonData"]).decode('utf-8')
+                                msg["msg"]["coopmap"] = base64.b64encode(bytes.fromhex(TLVmsg["CommonData"])).decode('utf-8')
                                 msg["msg"]["coopmaptype"] = TLVmsg["CommonDataType"]
                                 json_msg =  json.dumps(msg, ensure_ascii=False)
                                 topic_prefixed_message = f"{topic} {json_msg}".strip()
@@ -796,7 +796,7 @@ def core_sub2obu():
                                 msg["msg"]["oid"] = data.get("SourceId", "Unknown")
                                 msg["msg"]["topic"] = topic
                                 msg["msg"]["context"] = TLVmsg["ContextId"]
-                                msg["msg"]["coopmap"] = base64.b64encode(TLVmsg["CommonData"]).decode('utf-8')
+                                msg["msg"]["coopmap"] = base64.b64encode(bytes.fromhex(TLVmsg["CommonData"])).decode('utf-8')
                                 msg["msg"]["bearcap"] = TLVmsg["BearFlag"]
                                 json_msg =  json.dumps(msg, ensure_ascii=False)
                                 topic_prefixed_message = f"{topic} {json_msg}".strip()
@@ -817,7 +817,7 @@ def core_sub2obu():
                                 msg["msg"]["oid"] = data.get("SourceId", "Unknown")
                                 msg["msg"]["topic"] = topic
                                 msg["msg"]["context"] = TLVmsg["ContextId"]
-                                msg["msg"]["coopmap"] = base64.b64encode(TLVmsg["CommonData"]).decode('utf-8')
+                                msg["msg"]["coopmap"] = base64.b64encode(bytes.fromhex(TLVmsg["CommonData"])).decode('utf-8')
                                 msg["msg"]["bearcap"] = TLVmsg["BearFlag"]
                                 json_msg =  json.dumps(msg, ensure_ascii=False)
                                 topic_prefixed_message = f"{topic} {json_msg}".strip()
@@ -841,7 +841,7 @@ def core_sub2obu():
                                 msg["msg"]["topic"] = topic
                                 msg["msg"]["act"] = data.get("OP")
                                 msg["msg"]["context"] = TLVmsg["ContextId"]
-                                msg["msg"]["coopmap"] = base64.b64encode(TLVmsg["CommonData"]).decode('utf-8')
+                                msg["msg"]["coopmap"] = base64.b64encode(bytes.fromhex(TLVmsg["CommonData"])).decode('utf-8')
                                 msg["msg"]["bearinfo"] = TLVmsg["BearFlag"]
                                 json_msg =  json.dumps(msg, ensure_ascii=False)
                                 topic_prefixed_message = f"{topic} {json_msg}".strip()
@@ -863,7 +863,7 @@ def core_sub2obu():
                                 msg["msg"]["topic"] = topic
                                 msg["msg"]["act"] = data.get("OP")
                                 msg["msg"]["context"] = TLVmsg["ContextId"]
-                                msg["msg"]["coopmap"] = base64.b64encode(TLVmsg["CommonData"]).decode('utf-8')
+                                msg["msg"]["coopmap"] = base64.b64encode(bytes.fromhex(TLVmsg["CommonData"])).decode('utf-8')
                                 msg["msg"]["bearcap"] = TLVmsg["BearFlag"]
                                 json_msg =  json.dumps(msg, ensure_ascii=False)
                                 topic_prefixed_message = f"{topic} {json_msg}".strip()

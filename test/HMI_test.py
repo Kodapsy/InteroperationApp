@@ -30,7 +30,11 @@ def query_ncs_status_and_listen(broadcast_ip="192.168.20.198", port=50500, liste
         # 检查是否收到2002的回复
         if response_data.get("tag") == 2002:
             # 启动心跳线程
-            print(response_data)
+            #print(response_data)
+           # if(response_data.get("rsp") != 0):
+             #   print("error 2002")
+            #    return
+
             unique_id = response_data.get("unique")
             heartbeat_thread = threading.Thread(target=send_heartbeat, args=(listen_ip, listen_port,unique_id))
             heartbeat_thread.daemon = True
@@ -53,7 +57,11 @@ def send_heartbeat(listen_ip, listen_port,unique_id):
     while True:
         heartbeat_message = json.dumps({"tag": 2005, "unique": unique_id})
         sock.sendto(heartbeat_message.encode('utf-8'), (listen_ip, listen_port))
+        sock.settimeout(3)
         print("心跳信息已发送")
+        response,addr=sock.recvfrom(1024)
+        response_data = json.loads(response.decode('utf-8'))
+        printf(response_data)
         time.sleep(60)  # 每60秒发送一次心跳
 
 def listen_vehicle_info(listen_ip, listen_port, output_file,output_file2):
@@ -73,6 +81,8 @@ def listen_vehicle_info(listen_ip, listen_port, output_file,output_file2):
             # 解析JSON数据
             try:
                 message = json.loads(data.decode('utf-8'))
+                tag = message.get("tag",-1)
+                print(tag)
                 if message.get("tag") == 2101:  # 确认是本车节点信息上报
                     # 获取data并写入文件
                     self_data = message.get("data", {})
