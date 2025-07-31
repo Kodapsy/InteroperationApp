@@ -29,6 +29,8 @@ class TLVEncoderDecoder:
             field = TLVEncoderDecoder.FIELD_MAP[key]
             T = field["tag"]
             L = field["length"]
+            if L is None:
+                L = len(value) // 2
             dtype = field["type"]
 
             if dtype == "int":
